@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use Kurt\Modules\Loyalty\Exceptions\WalletNotConfiguredException;
 use Kurt\Modules\Loyalty\Models\Card;
 use Kurt\Modules\Loyalty\Models\Program;
@@ -122,11 +120,16 @@ it('signs a google save url with the service account key', function () {
     expect($url)->toStartWith('https://pay.google.com/gp/v/save/');
 
     $jwt = substr($url, strlen('https://pay.google.com/gp/v/save/'));
-    $decoded = JWT::decode($jwt, new Key($publicPem, 'RS256'));
+    [$header, $payload, $signature] = explode('.', $jwt);
 
-    expect($decoded->iss)->toBe('svc@example.iam.gserviceaccount.com')
-        ->and($decoded->typ)->toBe('savetowallet')
-        ->and($decoded->payload->loyaltyObjects[0]->accountId)->toBe($this->card->token);
+    $b64 = fn (string $s) => base64_decode(strtr($s, '-_', '+/'), true);
+    $verified = openssl_verify("{$header}.{$payload}", $b64($signature), $publicPem, OPENSSL_ALGO_SHA256);
+    expect($verified)->toBe(1);
+
+    $claims = json_decode($b64($payload), true);
+    expect($claims['iss'])->toBe('svc@example.iam.gserviceaccount.com')
+        ->and($claims['typ'])->toBe('savetowallet')
+        ->and($claims['payload']['loyaltyObjects'][0]['accountId'])->toBe($this->card->token);
 
     @unlink($saPath);
 });

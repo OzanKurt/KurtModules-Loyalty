@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Kurt\Modules\Loyalty\Wallet;
 
-use Firebase\JWT\JWT;
 use Kurt\Modules\Loyalty\Contracts\WalletProvider;
 use Kurt\Modules\Loyalty\Exceptions\WalletNotConfiguredException;
 use Kurt\Modules\Loyalty\Models\Card;
@@ -78,9 +77,35 @@ final class GoogleWalletProvider implements WalletProvider
             ],
         ];
 
-        $jwt = JWT::encode($claims, (string) $account['private_key'], 'RS256');
+        return 'https://pay.google.com/gp/v/save/'.$this->encodeRs256($claims, (string) $account['private_key']);
+    }
 
-        return 'https://pay.google.com/gp/v/save/'.$jwt;
+    /**
+     * Minimal RS256 JWT signer (avoids a third-party JWT dependency).
+     *
+     * @param  array<string, mixed>  $claims
+     */
+    private function encodeRs256(array $claims, string $privateKey): string
+    {
+        $segments = [
+            $this->base64Url((string) json_encode(['alg' => 'RS256', 'typ' => 'JWT'])),
+            $this->base64Url((string) json_encode($claims, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)),
+        ];
+
+        $signingInput = implode('.', $segments);
+        $signature = '';
+        if (! openssl_sign($signingInput, $signature, $privateKey, OPENSSL_ALGO_SHA256)) {
+            throw new WalletNotConfiguredException('Unable to sign the Google Wallet JWT.');
+        }
+
+        $segments[] = $this->base64Url($signature);
+
+        return implode('.', $segments);
+    }
+
+    private function base64Url(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
 
     public function pushUpdate(Card $card): void
