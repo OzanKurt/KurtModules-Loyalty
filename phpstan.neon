@@ -9,3 +9,6 @@ parameters:
         # Public API trait for the consuming app's User model; unused inside the package by design.
         - identifier: trait.unused
           path: src/Concerns/IsLoyaltyCustomer.php
+        # Namespaced package views are registered at runtime and can't be statically verified.
+        - message: '#expects view-string\|null, string given#'
+          path: src/Http/Controllers/*.php

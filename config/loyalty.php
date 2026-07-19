@@ -34,4 +34,28 @@ return [
     | false = roll the surplus over (count - stamps_required)
     */
     'reset_on_reward' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | HTTP routes
+    |--------------------------------------------------------------------------
+    */
+    'routes' => [
+        'prefix' => 'loyalty',
+        'domain' => null,
+        'middleware' => ['web'],
+        // Applied to public write endpoints (create / claim / voucher redeem).
+        'rate_limit' => '30,1',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Staff terminal
+    |--------------------------------------------------------------------------
+    | Middleware guarding the staff terminal. Defaults to the `loyalty:staff`
+    | gate, which is undefined (deny-all) until the consuming app defines it.
+    */
+    'staff' => [
+        'middleware' => ['can:loyalty:staff'],
+    ],
 ];

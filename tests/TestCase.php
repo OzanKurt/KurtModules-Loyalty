@@ -19,6 +19,14 @@ abstract class TestCase extends PackageTestCase
         return [LoyaltyServiceProvider::class];
     }
 
+    protected function defineEnvironment($app): void
+    {
+        parent::defineEnvironment($app);
+
+        // The `web` middleware group (encrypt cookies / session) needs an app key.
+        $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
+    }
+
     protected function defineDatabaseMigrations(): void
     {
         parent::defineDatabaseMigrations();

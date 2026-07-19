@@ -20,6 +20,8 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
             ->name('laravel-modules-loyalty')
             ->hasConfigFile('loyalty')
             ->hasTranslations()
+            ->hasViews('loyalty')
+            ->hasRoute('loyalty')
             ->hasMigrations([
                 'create_loyalty_programs_table',
                 'create_loyalty_cards_table',
