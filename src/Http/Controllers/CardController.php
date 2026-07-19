@@ -17,6 +17,7 @@ use Kurt\Modules\Loyalty\Models\Voucher;
 use Kurt\Modules\Loyalty\Services\CardService;
 use Kurt\Modules\Loyalty\Services\VoucherService;
 use Kurt\Modules\Loyalty\Support\CardState;
+use Kurt\Modules\Loyalty\Support\QrCode;
 use Kurt\Modules\Loyalty\Wallet\WalletManager;
 
 class CardController extends Controller
@@ -24,10 +25,12 @@ class CardController extends Controller
     public function show(string $token, WalletManager $wallet): View
     {
         $card = $this->resolveCard($token);
+        $state = CardState::for($card);
 
         return view('loyalty::card', [
-            'state' => CardState::for($card),
+            'state' => $state,
             'wallet' => $wallet->available(),
+            'qr' => QrCode::svg($state['code']),
         ]);
     }
 

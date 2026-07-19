@@ -38,7 +38,7 @@
         @endforeach
     </ol>
 
-    <div data-loyalty-qr data-loyalty-qr-value="{{ $state['code'] }}"></div>
+    <div data-loyalty-qr data-loyalty-qr-value="{{ $state['code'] }}">{!! $qr !!}</div>
 
     @php($wallet = $wallet ?? [])
     @if (count($wallet))

@@ -8,9 +8,6 @@
     "dev": "vite build --watch",
     "test": "vitest run"
   },
-  "dependencies": {
-    "qrcode": "^1.5.4"
-  },
   "devDependencies": {
     "jsdom": "^25.0.1",
     "vite": "^6.0.0",

@@ -1,5 +1,4 @@
 import { PollChannel } from './channel.js';
-import { renderQr } from './qr.js';
 import { applyState } from './state.js';
 
 // Drives a single [data-loyalty-card] element: seeds from the embedded config,
@@ -24,11 +23,6 @@ export class LoyaltyCard {
 
     async init() {
         applyState(this.root, this.config);
-
-        if (this.config.code) {
-            renderQr(this.root.querySelector('[data-loyalty-qr]'), this.config.code);
-        }
-
         this.revealWalletActions();
 
         const url = this.root.getAttribute('data-loyalty-state-url');

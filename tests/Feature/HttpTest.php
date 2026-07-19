@@ -18,6 +18,7 @@ it('renders the card page with the data-attribute contract', function () {
         ->assertOk()
         ->assertSee('data-loyalty-card', false)
         ->assertSee('data-loyalty-stamp', false)
+        ->assertSee('<svg', false)
         ->assertSee($card->token, false);
 });
 
