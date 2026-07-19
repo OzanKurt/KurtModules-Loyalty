@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Kurt\Modules\Loyalty\Http\Controllers\CardController;
 use Kurt\Modules\Loyalty\Http\Controllers\TerminalController;
+use Kurt\Modules\Loyalty\Http\Controllers\WalletController;
 
 Route::group([
     'prefix' => config('loyalty.routes.prefix'),
@@ -23,6 +24,9 @@ Route::group([
         ->middleware($rateLimit)->name('card.claim');
     Route::post('c/{token}/vouchers/{voucher}', [CardController::class, 'redeemVoucher'])
         ->middleware($rateLimit)->name('card.redeem-voucher');
+
+    Route::get('c/{token}/apple-pass', [WalletController::class, 'apple'])->name('card.apple');
+    Route::get('c/{token}/google-pass', [WalletController::class, 'google'])->name('card.google');
 
     Route::middleware(config('loyalty.staff.middleware', ['can:loyalty:staff']))
         ->prefix('terminal')

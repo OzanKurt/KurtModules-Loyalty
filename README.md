@@ -15,14 +15,42 @@ Every other KurtModules package is headless + Filament-only with no public views
 - **Configurable identity.** Cards can be anonymous (Mars-style), user-bound, or anonymous-then-claimable — chosen per install.
 - **Wallet via an adapter seam.** Apple `.pkpass` + Google Wallet behind one `WalletProvider` interface; live-updating passes are opt-in (certs/service account are the consuming app's to supply).
 
-## Status
+## Status — all milestones landed ✅
 
-- **Milestone 1 (this branch):** package foundation, schema, models/factories, and the four domain services (Card, Voucher, Stamp, Redemption). ✅
-- **Milestone 2:** HTTP surface (customer routes, `/state`, voucher redeem, staff terminal).
-- **Milestone 3:** Blade + vanilla JS + Vite build + themes.
-- **Milestone 4:** Apple/Google Wallet providers, live push, artisan commands.
+- **M1** — package foundation, schema, models/factories, domain services (Card, Voucher, Stamp, Redemption).
+- **M2** — HTTP surface: customer card routes, `/state` JSON, voucher redemption, staff terminal behind the `loyalty:staff` gate, rate limiting.
+- **M3** — frontend: vanilla-JS behavior layer (data-attribute contract), Vite build with committed `dist`, contract stylesheet + `coffee`/`hotdog`/`restaurant`/`minimal` themes (light + dark), QR rendering.
+- **M4** — Apple `.pkpass` + Google Wallet providers behind a `WalletProvider` seam, add-to-wallet endpoints + buttons, live-push seam (opt-in), and artisan commands (`loyalty:install`, `loyalty:demo`, `loyalty:prune-vouchers`, `loyalty:wallet-check`).
 
-See [`docs/superpowers/specs`](docs/superpowers/specs) for the full design.
+## Quick start
+
+```bash
+composer require ozankurt/laravel-modules-loyalty
+php artisan loyalty:install   # publish config, migrations, views, assets
+php artisan migrate
+php artisan loyalty:demo       # seed a program + card, prints the card URL
+```
+
+Define who staff are (the terminal is deny-all until you do):
+
+```php
+// AuthServiceProvider
+Gate::define('loyalty:staff', fn ($user) => $user->is_staff);
+```
+
+Wallet passes are opt-in — set the Apple certificate / Google service-account env vars, then `php artisan loyalty:wallet-check`. Live pass updates need `LOYALTY_WALLET_PUSH=true` plus a queue worker.
+
+## Frontend
+
+The behavior layer is framework-free and keyed to a stable `data-*` attribute contract, so the entire stylesheet is swappable without touching JS. Rebuild/extend it with your own pipeline:
+
+```bash
+npm install
+npm run build   # -> resources/dist (loyalty.js, loyalty.css, themes/*)
+npm run test    # Vitest
+```
+
+See [`docs/superpowers/specs`](docs/superpowers/specs) for the full design and [`docs/superpowers/plans`](docs/superpowers/plans) for the build plan.
 
 ## License
 

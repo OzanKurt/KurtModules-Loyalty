@@ -40,10 +40,17 @@
 
     <div data-loyalty-qr data-loyalty-qr-value="{{ $state['code'] }}"></div>
 
-    <div data-loyalty-wallet-actions hidden>
-        <a data-loyalty-wallet="apple" hidden>Apple Wallet</a>
-        <a data-loyalty-wallet="google" hidden>Google Wallet</a>
-    </div>
+    @php($wallet = $wallet ?? [])
+    @if (count($wallet))
+        <div data-loyalty-wallet-actions>
+            @if (in_array('apple', $wallet, true))
+                <a data-loyalty-wallet="apple" href="{{ route('loyalty.card.apple', $state['token']) }}">Add to Apple Wallet</a>
+            @endif
+            @if (in_array('google', $wallet, true))
+                <a data-loyalty-wallet="google" href="{{ route('loyalty.card.google', $state['token']) }}">Add to Google Wallet</a>
+            @endif
+        </div>
+    @endif
 
     <script type="application/json" data-loyalty-config>@json($state)</script>
 </main>

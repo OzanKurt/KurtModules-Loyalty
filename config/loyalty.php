@@ -69,4 +69,34 @@ return [
     'assets' => [
         'base' => 'vendor/modules-loyalty',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Wallet passes
+    |--------------------------------------------------------------------------
+    | Apple + Google are opt-in and only render "Add to wallet" buttons once the
+    | corresponding credentials are configured. `push` enables live pass updates
+    | when a stamp is added or a reward redeemed (requires a queue worker).
+    */
+    'wallet' => [
+        'push' => env('LOYALTY_WALLET_PUSH', false),
+
+        'apple' => [
+            'enabled' => env('LOYALTY_APPLE_WALLET', false),
+            'pass_type_id' => env('LOYALTY_APPLE_PASS_TYPE_ID'),
+            'team_id' => env('LOYALTY_APPLE_TEAM_ID'),
+            'organization_name' => env('LOYALTY_APPLE_ORG', 'Loyalty'),
+            'certificate' => env('LOYALTY_APPLE_CERTIFICATE'),
+            'certificate_password' => env('LOYALTY_APPLE_CERTIFICATE_PASSWORD', ''),
+            'wwdr_certificate' => env('LOYALTY_APPLE_WWDR_CERTIFICATE'),
+            'icon' => env('LOYALTY_APPLE_ICON'),
+        ],
+
+        'google' => [
+            'enabled' => env('LOYALTY_GOOGLE_WALLET', false),
+            'issuer_id' => env('LOYALTY_GOOGLE_ISSUER_ID'),
+            'class_id' => env('LOYALTY_GOOGLE_CLASS_ID'),
+            'service_account' => env('LOYALTY_GOOGLE_SERVICE_ACCOUNT'),
+        ],
+    ],
 ];
