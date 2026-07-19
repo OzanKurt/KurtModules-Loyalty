@@ -9,7 +9,21 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $program_id
+ * @property string $token
+ * @property int $stamps
+ * @property string|null $issued_by
+ * @property Carbon|null $expires_at
+ * @property Carbon|null $redeemed_at
+ * @property int|null $redeemed_by_card_id
+ * @property string $status
+ * @property Program $program
+ * @property Card|null $redeemedByCard
+ */
 class Voucher extends Model
 {
     /** @use HasFactory<VoucherFactory> */
@@ -50,6 +64,7 @@ class Voucher extends Model
         return true;
     }
 
+    /** @return VoucherFactory */
     protected static function newFactory(): Factory
     {
         return VoucherFactory::new();

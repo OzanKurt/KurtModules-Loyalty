@@ -5,14 +5,33 @@ declare(strict_types=1);
 namespace Kurt\Modules\Loyalty\Models;
 
 use Database\Factories\Kurt\Modules\Loyalty\CardFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Kurt\Modules\Loyalty\Enums\CardStatus;
 
+/**
+ * @property int $id
+ * @property int $program_id
+ * @property string $token
+ * @property int|null $user_id
+ * @property string|null $email
+ * @property string|null $phone
+ * @property int $stamps_count
+ * @property int $rewards_earned
+ * @property int $rewards_redeemed
+ * @property CardStatus $status
+ * @property Carbon|null $last_stamped_at
+ * @property Program $program
+ * @property Collection<int, Stamp> $stamps
+ * @property Collection<int, Redemption> $redemptions
+ * @property Collection<int, WalletPass> $walletPasses
+ */
 class Card extends Model
 {
     /** @use HasFactory<CardFactory> */
@@ -73,6 +92,7 @@ class Card extends Model
         return max(0, $this->rewards_earned - $this->rewards_redeemed);
     }
 
+    /** @return CardFactory */
     protected static function newFactory(): Factory
     {
         return CardFactory::new();

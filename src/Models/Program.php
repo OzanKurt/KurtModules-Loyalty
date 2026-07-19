@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kurt\Modules\Loyalty\Models;
 
 use Database\Factories\Kurt\Modules\Loyalty\ProgramFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,24 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Translatable\HasTranslations;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string $reward
+ * @property int $stamps_required
+ * @property string $theme
+ * @property string $icon
+ * @property int $cooldown_seconds
+ * @property int|null $max_per_day
+ * @property bool $reset_on_reward
+ * @property bool $is_active
+ * @property string|null $owner_type
+ * @property int|null $owner_id
+ * @property Collection<int, Card> $cards
+ * @property Collection<int, Voucher> $vouchers
+ * @property Model|null $owner
+ */
 class Program extends Model
 {
     /** @use HasFactory<ProgramFactory> */
@@ -54,6 +73,7 @@ class Program extends Model
         return $this->morphTo();
     }
 
+    /** @return ProgramFactory */
     protected static function newFactory(): Factory
     {
         return ProgramFactory::new();

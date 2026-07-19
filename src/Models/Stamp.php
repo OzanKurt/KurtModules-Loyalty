@@ -9,8 +9,19 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Kurt\Modules\Loyalty\Enums\StampSource;
 
+/**
+ * @property int $id
+ * @property int $card_id
+ * @property int|null $voucher_id
+ * @property StampSource $source
+ * @property string|null $granted_by
+ * @property Carbon|null $created_at
+ * @property Card $card
+ * @property Voucher|null $voucher
+ */
 class Stamp extends Model
 {
     /** @use HasFactory<StampFactory> */
@@ -39,6 +50,7 @@ class Stamp extends Model
         return $this->belongsTo(Voucher::class);
     }
 
+    /** @return StampFactory */
     protected static function newFactory(): Factory
     {
         return StampFactory::new();

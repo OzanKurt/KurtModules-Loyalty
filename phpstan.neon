@@ -5,3 +5,7 @@ parameters:
     paths:
         - src
     tmpDir: build/phpstan
+    ignoreErrors:
+        # Public API trait for the consuming app's User model; unused inside the package by design.
+        - identifier: trait.unused
+          path: src/Concerns/IsLoyaltyCustomer.php

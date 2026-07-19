@@ -9,7 +9,16 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $card_id
+ * @property array<string, string> $reward
+ * @property string|null $redeemed_by
+ * @property Carbon|null $created_at
+ * @property Card $card
+ */
 class Redemption extends Model
 {
     /** @use HasFactory<RedemptionFactory> */
@@ -32,6 +41,7 @@ class Redemption extends Model
         return $this->belongsTo(Card::class);
     }
 
+    /** @return RedemptionFactory */
     protected static function newFactory(): Factory
     {
         return RedemptionFactory::new();
