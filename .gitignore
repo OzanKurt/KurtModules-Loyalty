@@ -1,0 +1,8 @@
+/vendor
+/build
+.phpunit.result.cache
+composer.lock
+.idea
+.phpstorm.meta.php
+node_modules
+/public/vendor
