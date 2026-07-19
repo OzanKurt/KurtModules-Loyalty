@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $state['program']['name'] }}</title>
+    @php($assets = config('loyalty.assets.base'))
+    <link rel="stylesheet" href="{{ asset($assets.'/loyalty.css') }}">
+    <link rel="stylesheet" href="{{ asset($assets.'/themes/'.$state['program']['theme'].'.css') }}">
     @stack('loyalty-head')
 </head>
 <body>
@@ -44,6 +47,7 @@
 
     <script type="application/json" data-loyalty-config>@json($state)</script>
 </main>
+<script src="{{ asset(config('loyalty.assets.base').'/loyalty.js') }}"></script>
 @stack('loyalty-scripts')
 </body>
 </html>

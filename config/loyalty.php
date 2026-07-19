@@ -58,4 +58,15 @@ return [
     'staff' => [
         'middleware' => ['can:loyalty:staff'],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Assets
+    |--------------------------------------------------------------------------
+    | Public path the built JS/CSS are published to via
+    | `php artisan vendor:publish --tag=modules-loyalty-assets`.
+    */
+    'assets' => [
+        'base' => 'vendor/modules-loyalty',
+    ],
 ];

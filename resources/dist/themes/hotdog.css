@@ -1,0 +1,35 @@
+/* Hotdog — playful, street-food red + mustard. */
+[data-loyalty-theme="hotdog"] {
+    --loyalty-bg: #fff8ec;
+    --loyalty-surface: #ffefcf;
+    --loyalty-fg: #3a1d12;
+    --loyalty-muted: #b06a4a;
+    --loyalty-accent: #e23b2e;
+    --loyalty-on-accent: #fffdf7;
+    --loyalty-stamp-empty: #f6ddb4;
+    --loyalty-radius: 22px;
+    --loyalty-font: "Trebuchet MS", ui-rounded, system-ui, sans-serif;
+}
+
+[data-loyalty-theme="hotdog"][data-loyalty-scheme="dark"],
+:root[data-theme="dark"] [data-loyalty-theme="hotdog"] {
+    --loyalty-bg: #1f1109;
+    --loyalty-surface: #2c1810;
+    --loyalty-fg: #ffe9c9;
+    --loyalty-muted: #c98a63;
+    --loyalty-accent: #ff6a3d;
+    --loyalty-on-accent: #1f1109;
+    --loyalty-stamp-empty: #3c2415;
+}
+
+@media (prefers-color-scheme: dark) {
+    [data-loyalty-theme="hotdog"]:not([data-loyalty-scheme="light"]) {
+        --loyalty-bg: #1f1109;
+        --loyalty-surface: #2c1810;
+        --loyalty-fg: #ffe9c9;
+        --loyalty-muted: #c98a63;
+        --loyalty-accent: #ff6a3d;
+        --loyalty-on-accent: #1f1109;
+        --loyalty-stamp-empty: #3c2415;
+    }
+}

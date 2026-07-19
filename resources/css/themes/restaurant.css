@@ -1,0 +1,34 @@
+/* Restaurant — refined, deep green + brass. */
+[data-loyalty-theme="restaurant"] {
+    --loyalty-bg: #f6f7f4;
+    --loyalty-surface: #e8ece4;
+    --loyalty-fg: #1c2b22;
+    --loyalty-muted: #5f7568;
+    --loyalty-accent: #1f6b4c;
+    --loyalty-on-accent: #f6f7f4;
+    --loyalty-stamp-empty: #d6ddd2;
+    --loyalty-font: "Cormorant Garamond", Georgia, serif;
+}
+
+[data-loyalty-theme="restaurant"][data-loyalty-scheme="dark"],
+:root[data-theme="dark"] [data-loyalty-theme="restaurant"] {
+    --loyalty-bg: #0f1712;
+    --loyalty-surface: #17211a;
+    --loyalty-fg: #e4ede6;
+    --loyalty-muted: #8ba497;
+    --loyalty-accent: #3f9c73;
+    --loyalty-on-accent: #0f1712;
+    --loyalty-stamp-empty: #25332b;
+}
+
+@media (prefers-color-scheme: dark) {
+    [data-loyalty-theme="restaurant"]:not([data-loyalty-scheme="light"]) {
+        --loyalty-bg: #0f1712;
+        --loyalty-surface: #17211a;
+        --loyalty-fg: #e4ede6;
+        --loyalty-muted: #8ba497;
+        --loyalty-accent: #3f9c73;
+        --loyalty-on-accent: #0f1712;
+        --loyalty-stamp-empty: #25332b;
+    }
+}

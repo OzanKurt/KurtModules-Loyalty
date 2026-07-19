@@ -21,6 +21,7 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
             ->hasConfigFile('loyalty')
             ->hasTranslations()
             ->hasViews('loyalty')
+            ->hasAssets()
             ->hasRoute('loyalty')
             ->hasMigrations([
                 'create_loyalty_programs_table',

@@ -1,0 +1,19 @@
+{
+  "name": "@ozankurt/laravel-modules-loyalty",
+  "private": true,
+  "type": "module",
+  "description": "Frontend behavior layer + themes for the KurtModules Loyalty package.",
+  "scripts": {
+    "build": "vite build && node scripts/copy-themes.mjs",
+    "dev": "vite build --watch",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.1",
+    "vite": "^6.0.0",
+    "vitest": "^2.1.0"
+  }
+}

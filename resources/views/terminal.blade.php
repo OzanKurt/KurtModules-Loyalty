@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Loyalty Terminal</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php($assets = config('loyalty.assets.base'))
+    <link rel="stylesheet" href="{{ asset($assets.'/loyalty.css') }}">
+    <link rel="stylesheet" href="{{ asset($assets.'/themes/minimal.css') }}">
     @stack('loyalty-head')
 </head>
 <body>
@@ -22,6 +26,7 @@
 
     <div data-loyalty-terminal-result hidden></div>
 </main>
+<script src="{{ asset(config('loyalty.assets.base').'/loyalty.js') }}"></script>
 @stack('loyalty-scripts')
 </body>
 </html>

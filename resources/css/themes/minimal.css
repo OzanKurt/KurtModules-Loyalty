@@ -1,0 +1,35 @@
+/* Minimal — monochrome, one restrained accent. */
+[data-loyalty-theme="minimal"] {
+    --loyalty-bg: #ffffff;
+    --loyalty-surface: #f4f4f5;
+    --loyalty-fg: #111113;
+    --loyalty-muted: #71717a;
+    --loyalty-accent: #111113;
+    --loyalty-on-accent: #ffffff;
+    --loyalty-stamp-empty: #e4e4e7;
+    --loyalty-radius: 12px;
+    --loyalty-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+[data-loyalty-theme="minimal"][data-loyalty-scheme="dark"],
+:root[data-theme="dark"] [data-loyalty-theme="minimal"] {
+    --loyalty-bg: #0b0b0c;
+    --loyalty-surface: #17171a;
+    --loyalty-fg: #f4f4f5;
+    --loyalty-muted: #a1a1aa;
+    --loyalty-accent: #fafafa;
+    --loyalty-on-accent: #0b0b0c;
+    --loyalty-stamp-empty: #27272a;
+}
+
+@media (prefers-color-scheme: dark) {
+    [data-loyalty-theme="minimal"]:not([data-loyalty-scheme="light"]) {
+        --loyalty-bg: #0b0b0c;
+        --loyalty-surface: #17171a;
+        --loyalty-fg: #f4f4f5;
+        --loyalty-muted: #a1a1aa;
+        --loyalty-accent: #fafafa;
+        --loyalty-on-accent: #0b0b0c;
+        --loyalty-stamp-empty: #27272a;
+    }
+}
