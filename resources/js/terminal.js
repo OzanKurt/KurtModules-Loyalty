@@ -25,8 +25,9 @@ export class LoyaltyTerminal {
 
     async submit(url) {
         const token = this.input?.value?.trim();
-        if (!token || !url || !this.fetch) return null;
+        if (!token || !url || !this.fetch || this.busy) return null;
 
+        this.setBusy(true);
         let ok = false;
         let data = {};
         try {
@@ -36,6 +37,7 @@ export class LoyaltyTerminal {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
+                    'Idempotency-Key': idempotencyKey(),
                     ...csrfHeader(),
                 },
                 body: JSON.stringify({ card_token: token }),
@@ -44,10 +46,20 @@ export class LoyaltyTerminal {
             data = await res.json().catch(() => ({}));
         } catch {
             data = { message: 'Network error' };
+        } finally {
+            this.setBusy(false);
         }
 
         this.showResult(ok, data);
         return { ok, data };
+    }
+
+    setBusy(busy) {
+        this.busy = busy;
+        this.root.querySelectorAll('[data-loyalty-stamp-btn], [data-loyalty-redeem-btn]').forEach((btn) => {
+            btn.disabled = busy;
+        });
+        this.root.toggleAttribute('data-loyalty-busy', busy);
     }
 
     showResult(ok, data) {
@@ -64,4 +76,9 @@ function csrfHeader() {
     if (typeof document === 'undefined') return {};
     const meta = document.querySelector('meta[name="csrf-token"]');
     return meta ? { 'X-CSRF-TOKEN': meta.getAttribute('content') } : {};
+}
+
+function idempotencyKey() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    return `k-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
 }

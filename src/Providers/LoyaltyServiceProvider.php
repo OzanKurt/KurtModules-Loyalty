@@ -31,7 +31,6 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
         $package
             ->name('laravel-modules-loyalty')
             ->hasConfigFile('loyalty')
-            ->hasTranslations()
             ->hasMigrations([
                 'create_loyalty_programs_table',
                 'create_loyalty_cards_table',
@@ -56,6 +55,15 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
+        // Loaded under a clean `loyalty::` namespace (not Spatie's derived
+        // `modules-loyalty::`), and available regardless of HTTP mode.
+        $this->loadTranslationsFrom(__DIR__.'/../../lang', 'loyalty');
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../../lang' => $this->app->langPath('vendor/loyalty'),
+            ], 'modules-loyalty-translations');
+        }
+
         $this->registerHttp();
         $this->registerWalletPush();
     }

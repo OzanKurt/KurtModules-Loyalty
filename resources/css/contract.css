@@ -113,6 +113,16 @@
     100% { transform: scale(1); }
 }
 
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+    [data-loyalty-stamp],
+    [data-loyalty-stamp]::after,
+    [data-loyalty-pulse] [data-loyalty-stamp][data-state="filled"]:last-of-type {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
 [data-loyalty-qr] {
     display: flex;
     justify-content: center;
@@ -165,6 +175,18 @@
 [data-loyalty-terminal] [data-loyalty-redeem-btn] {
     background: var(--loyalty-surface);
     color: var(--loyalty-fg);
+}
+
+[data-loyalty-terminal] button:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+[data-loyalty-terminal] label {
+    display: block;
+    flex: 1 0 100%;
+    font-size: 0.85rem;
+    color: var(--loyalty-muted);
 }
 
 [data-loyalty-terminal-result] {

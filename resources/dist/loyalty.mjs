@@ -1,6 +1,6 @@
 class f {
-  constructor(t, { interval: e = 5e3, onUpdate: s = null, fetchImpl: n = null } = {}) {
-    this.url = t, this.interval = e, this.onUpdate = s, this.fetch = n || (typeof fetch < "u" ? fetch.bind(globalThis) : null), this.timer = null;
+  constructor(t, { interval: e = 5e3, onUpdate: s = null, fetchImpl: i = null } = {}) {
+    this.url = t, this.interval = e, this.onUpdate = s, this.fetch = i || (typeof fetch < "u" ? fetch.bind(globalThis) : null), this.timer = null;
   }
   async poll() {
     if (!(!this.fetch || !this.url))
@@ -20,23 +20,23 @@ class f {
     return this.timer && (clearInterval(this.timer), this.timer = null), this;
   }
 }
-function p(i, t) {
+function p(n, t) {
   const e = [];
   for (let s = 1; s <= t; s++)
-    e.push({ index: s, state: s <= i ? "filled" : "empty" });
+    e.push({ index: s, state: s <= n ? "filled" : "empty" });
   return e;
 }
-function u(i, t) {
-  if (!i || !t) return i;
-  const e = t.program ? t.program.stamps_required : 0, s = i.querySelector("[data-loyalty-count]");
+function u(n, t) {
+  if (!n || !t) return n;
+  const e = t.program ? t.program.stamps_required : 0, s = n.querySelector("[data-loyalty-count]");
   s && (s.textContent = String(t.stamps_count ?? 0));
-  const n = i.querySelector("[data-loyalty-required]");
-  n && (n.textContent = String(e));
+  const i = n.querySelector("[data-loyalty-required]");
+  i && (i.textContent = String(e));
   const a = t.stamps && t.stamps.length ? t.stamps : p(t.stamps_count ?? 0, e);
-  return i.querySelectorAll("[data-loyalty-stamp]").forEach((r) => {
-    const l = Number(r.getAttribute("data-index")), c = a.find((y) => y.index === l);
+  return n.querySelectorAll("[data-loyalty-stamp]").forEach((r) => {
+    const o = Number(r.getAttribute("data-index")), c = a.find((y) => y.index === o);
     c && r.setAttribute("data-state", c.state);
-  }), i.toggleAttribute("data-loyalty-complete", !!t.is_complete), i;
+  }), n.toggleAttribute("data-loyalty-complete", !!t.is_complete), n;
 }
 class h {
   constructor(t, { channelFactory: e = null } = {}) {
@@ -93,24 +93,33 @@ class d {
   async submit(t) {
     var a, r;
     const e = (r = (a = this.input) == null ? void 0 : a.value) == null ? void 0 : r.trim();
-    if (!e || !t || !this.fetch) return null;
-    let s = !1, n = {};
+    if (!e || !t || !this.fetch || this.busy) return null;
+    this.setBusy(!0);
+    let s = !1, i = {};
     try {
-      const l = await this.fetch(t, {
+      const o = await this.fetch(t, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
           "X-Requested-With": "XMLHttpRequest",
+          "Idempotency-Key": b(),
           ...m()
         },
         body: JSON.stringify({ card_token: e })
       });
-      s = l.ok, n = await l.json().catch(() => ({}));
+      s = o.ok, i = await o.json().catch(() => ({}));
     } catch {
-      n = { message: "Network error" };
+      i = { message: "Network error" };
+    } finally {
+      this.setBusy(!1);
     }
-    return this.showResult(s, n), { ok: s, data: n };
+    return this.showResult(s, i), { ok: s, data: i };
+  }
+  setBusy(t) {
+    this.busy = t, this.root.querySelectorAll("[data-loyalty-stamp-btn], [data-loyalty-redeem-btn]").forEach((e) => {
+      e.disabled = t;
+    }), this.root.toggleAttribute("data-loyalty-busy", t);
   }
   showResult(t, e) {
     var s;
@@ -119,27 +128,30 @@ class d {
 }
 function m() {
   if (typeof document > "u") return {};
-  const i = document.querySelector('meta[name="csrf-token"]');
-  return i ? { "X-CSRF-TOKEN": i.getAttribute("content") } : {};
+  const n = document.querySelector('meta[name="csrf-token"]');
+  return n ? { "X-CSRF-TOKEN": n.getAttribute("content") } : {};
 }
-function o(i = document) {
+function b() {
+  return typeof crypto < "u" && crypto.randomUUID ? crypto.randomUUID() : `k-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+}
+function l(n = document) {
   const t = [];
-  i.querySelectorAll("[data-loyalty-card]").forEach((s) => {
-    const n = new h(s);
-    n.init(), t.push(n);
+  n.querySelectorAll("[data-loyalty-card]").forEach((s) => {
+    const i = new h(s);
+    i.init(), t.push(i);
   });
   const e = [];
-  return i.querySelectorAll("[data-loyalty-terminal]").forEach((s) => {
-    const n = new d(s);
-    n.init(), e.push(n);
+  return n.querySelectorAll("[data-loyalty-terminal]").forEach((s) => {
+    const i = new d(s);
+    i.init(), e.push(i);
   }), { cards: t, terminals: e };
 }
-typeof window < "u" && (window.Loyalty = { init: o, LoyaltyCard: h, LoyaltyTerminal: d }, typeof document < "u" && (document.readyState !== "loading" ? o() : document.addEventListener("DOMContentLoaded", () => o())));
+typeof window < "u" && (window.Loyalty = { init: l, LoyaltyCard: h, LoyaltyTerminal: d }, typeof document < "u" && (document.readyState !== "loading" ? l() : document.addEventListener("DOMContentLoaded", () => l())));
 export {
   h as LoyaltyCard,
   d as LoyaltyTerminal,
   f as PollChannel,
   u as applyState,
   p as computeStamps,
-  o as init
+  l as init
 };

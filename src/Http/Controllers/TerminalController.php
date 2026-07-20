@@ -16,6 +16,7 @@ use Kurt\Modules\Loyalty\Models\Card;
 use Kurt\Modules\Loyalty\Services\RedemptionService;
 use Kurt\Modules\Loyalty\Services\StampService;
 use Kurt\Modules\Loyalty\Support\CardState;
+use Kurt\Modules\Loyalty\Support\Idempotency;
 
 class TerminalController extends Controller
 {
@@ -27,6 +28,10 @@ class TerminalController extends Controller
     public function stamp(Request $request, StampService $stamps): JsonResponse
     {
         $card = $this->resolveCard($request);
+
+        if ($this->isReplay($request)) {
+            return response()->json(CardState::for($card));
+        }
 
         try {
             $card = $stamps->add($card, StampSource::StaffTerminal, grantedBy: $this->actor($request));
@@ -41,6 +46,10 @@ class TerminalController extends Controller
     {
         $card = $this->resolveCard($request);
 
+        if ($this->isReplay($request)) {
+            return response()->json(CardState::for($card));
+        }
+
         try {
             $card = $redemptions->redeem($card, redeemedBy: $this->actor($request));
         } catch (NoRewardAvailableException $e) {
@@ -48,6 +57,17 @@ class TerminalController extends Controller
         }
 
         return response()->json(CardState::for($card));
+    }
+
+    /**
+     * True when the request carries an idempotency key already seen within the
+     * TTL — a double-tap / retry that must not re-apply the action.
+     */
+    private function isReplay(Request $request): bool
+    {
+        $key = Idempotency::key($request);
+
+        return $key !== null && ! Idempotency::claim($key);
     }
 
     private function resolveCard(Request $request): Card

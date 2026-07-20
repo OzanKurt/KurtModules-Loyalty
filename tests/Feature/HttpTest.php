@@ -71,6 +71,20 @@ it('lets the staff terminal resolve a card by its short code', function () {
         ->assertJsonPath('stamps_count', 1);
 });
 
+it('does not double-apply a stamp for a repeated idempotency key', function () {
+    Gate::define('loyalty:staff', fn ($user = null) => true);
+    $card = Card::factory()->for($this->program)->create();
+    $headers = ['Idempotency-Key' => 'dup-key-123'];
+
+    $this->postJson(route('loyalty.terminal.stamp'), ['card_token' => $card->code], $headers)
+        ->assertOk()->assertJsonPath('stamps_count', 1);
+    $this->postJson(route('loyalty.terminal.stamp'), ['card_token' => $card->code], $headers)
+        ->assertOk()->assertJsonPath('stamps_count', 1);
+
+    expect($card->refresh()->stamps_count)->toBe(1)
+        ->and($card->stamps()->count())->toBe(1);
+});
+
 it('redeems a voucher onto a card via POST', function () {
     $card = Card::factory()->for($this->program)->create();
     $voucher = app(VoucherService::class)->issue($this->program, stamps: 1);
@@ -78,6 +92,15 @@ it('redeems a voucher onto a card via POST', function () {
     $this->postJson(route('loyalty.card.redeem-voucher', ['token' => $card->token, 'voucher' => $voucher->token]))
         ->assertOk()
         ->assertJsonPath('stamps_count', 1);
+});
+
+it('renders translated terminal strings and switches with the locale', function () {
+    Gate::define('loyalty:staff', fn ($user = null) => true);
+
+    $this->get(route('loyalty.terminal.index'))->assertOk()->assertSee('Loyalty Terminal');
+
+    app()->setLocale('tr');
+    $this->get(route('loyalty.terminal.index'))->assertOk()->assertSee('Sadakat Terminali');
 });
 
 it('blocks the staff terminal when the gate is undefined', function () {

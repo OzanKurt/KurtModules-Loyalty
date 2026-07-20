@@ -61,6 +61,21 @@ return [
         'middleware' => ['web'],
         // Applied to public write endpoints (create / claim / voucher redeem).
         'rate_limit' => '30,1',
+        // Applied to the staff terminal stamp/redeem endpoints.
+        'terminal_rate_limit' => '60,1',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Idempotency
+    |--------------------------------------------------------------------------
+    | Stamp/redeem requests may carry an `Idempotency-Key` header (or
+    | `idempotency_key` field). A key seen within the TTL is treated as a
+    | replay: the action is not re-applied and the current state is returned.
+    | Guards against double-taps / retries beyond the stamp cooldown.
+    */
+    'idempotency' => [
+        'ttl' => 60,
     ],
 
     /*

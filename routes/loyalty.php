@@ -17,6 +17,7 @@ Route::group([
 ], function () use ($mode) {
     $rateLimit = 'throttle:'.config('loyalty.routes.rate_limit', '30,1');
     $staff = config('loyalty.staff.middleware', ['can:loyalty:staff']);
+    $terminal = array_merge((array) $staff, ['throttle:'.config('loyalty.routes.terminal_rate_limit', '60,1')]);
 
     /*
     | API surface — JSON + resource endpoints. Registered in both 'api' and 'ui'.
@@ -33,7 +34,7 @@ Route::group([
     Route::get('c/{token}/apple-pass', [WalletController::class, 'apple'])->name('card.apple');
     Route::get('c/{token}/google-pass', [WalletController::class, 'google'])->name('card.google');
 
-    Route::middleware($staff)->prefix('terminal')->as('terminal.')->group(function () {
+    Route::middleware($terminal)->prefix('terminal')->as('terminal.')->group(function () {
         Route::post('stamp', [TerminalController::class, 'stamp'])->name('stamp');
         Route::post('redeem', [TerminalController::class, 'redeem'])->name('redeem');
     });
