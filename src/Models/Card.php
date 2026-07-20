@@ -19,6 +19,7 @@ use Kurt\Modules\Loyalty\Enums\CardStatus;
  * @property int $id
  * @property int $program_id
  * @property string $token
+ * @property string $code
  * @property int|null $user_id
  * @property string|null $email
  * @property string|null $phone

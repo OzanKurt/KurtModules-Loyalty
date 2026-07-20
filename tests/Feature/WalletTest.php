@@ -28,7 +28,7 @@ it('builds an apple storeCard payload', function () {
     expect($pass['serialNumber'])->toBe($this->card->token)
         ->and($pass['passTypeIdentifier'])->toBe('pass.com.example.loyalty')
         ->and($pass['storeCard']['primaryFields'][0]['value'])->toBe('3 / 7')
-        ->and($pass['barcodes'][0]['message'])->toBe(strtoupper($this->card->token));
+        ->and($pass['barcodes'][0]['message'])->toBe($this->card->code);
 });
 
 it('refuses to package a pkpass when unconfigured', function () {
@@ -92,7 +92,7 @@ it('builds a google loyalty object', function () {
     expect($object['id'])->toBe('3388000000000000000.'.$this->card->token)
         ->and($object['classId'])->toBe('3388000000000000000.coffee')
         ->and($object['loyaltyPoints']['balance']['string'])->toBe('3 / 7')
-        ->and($object['barcode']['value'])->toBe(strtoupper($this->card->token));
+        ->and($object['barcode']['value'])->toBe($this->card->code);
 });
 
 it('signs a google save url with the service account key', function () {

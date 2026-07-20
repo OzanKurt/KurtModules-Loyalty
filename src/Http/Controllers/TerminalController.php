@@ -53,8 +53,14 @@ class TerminalController extends Controller
     private function resolveCard(Request $request): Card
     {
         $data = $request->validate(['card_token' => ['required', 'string']]);
+        $value = trim($data['card_token']);
 
-        return Card::query()->where('token', $data['card_token'])->firstOrFail();
+        // The terminal is staff-gated, so it may resolve a card by either the
+        // scanned/typed short code or the long URL token.
+        return Card::query()
+            ->where('code', strtoupper($value))
+            ->orWhere('token', $value)
+            ->firstOrFail();
     }
 
     private function actor(Request $request): ?string

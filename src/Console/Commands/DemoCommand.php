@@ -29,7 +29,7 @@ final class DemoCommand extends Command
         $card = $cards->create($program);
 
         $this->info('Demo program created: '.$program->slug);
-        $this->line('Card code: '.strtoupper($card->token));
+        $this->line('Card code: '.$card->code);
         $this->line('Card URL:  '.route('loyalty.card.show', $card->token));
 
         return self::SUCCESS;

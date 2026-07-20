@@ -8,6 +8,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Kurt\Modules\Loyalty\Exceptions\CardAlreadyClaimedException;
 use Kurt\Modules\Loyalty\Exceptions\CardNotClaimableException;
 use Kurt\Modules\Loyalty\Exceptions\VoucherAlreadyRedeemedException;
 use Kurt\Modules\Loyalty\Exceptions\VoucherExpiredException;
@@ -62,6 +63,8 @@ class CardController extends Controller
             $card = $cards->claim($this->resolveCard($token), $data);
         } catch (CardNotClaimableException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
+        } catch (CardAlreadyClaimedException $e) {
+            return response()->json(['message' => $e->getMessage()], 409);
         }
 
         return response()->json(CardState::for($card));

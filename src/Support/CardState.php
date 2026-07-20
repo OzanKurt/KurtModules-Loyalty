@@ -29,7 +29,7 @@ final class CardState
 
         return [
             'token' => $card->token,
-            'code' => strtoupper($card->token),
+            'code' => $card->code,
             'program' => [
                 'slug' => $program->slug,
                 'name' => $program->name,

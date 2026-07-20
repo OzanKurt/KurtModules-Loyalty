@@ -52,6 +52,25 @@ it('claims a card via POST', function () {
     expect($card->refresh()->email)->toBe('x@y.com');
 });
 
+it('rejects re-claiming an already claimed card with 409', function () {
+    config()->set('loyalty.identity_mode', 'anonymous_claimable');
+    $card = Card::factory()->for($this->program)->create(['email' => 'owner@x.com']);
+
+    $this->postJson(route('loyalty.card.claim', $card->token), ['email' => 'thief@x.com'])
+        ->assertStatus(409);
+
+    expect($card->refresh()->email)->toBe('owner@x.com');
+});
+
+it('lets the staff terminal resolve a card by its short code', function () {
+    Gate::define('loyalty:staff', fn ($user = null) => true);
+    $card = Card::factory()->for($this->program)->create();
+
+    $this->postJson(route('loyalty.terminal.stamp'), ['card_token' => $card->code])
+        ->assertOk()
+        ->assertJsonPath('stamps_count', 1);
+});
+
 it('redeems a voucher onto a card via POST', function () {
     $card = Card::factory()->for($this->program)->create();
     $voucher = app(VoucherService::class)->issue($this->program, stamps: 1);

@@ -13,7 +13,8 @@ return new class extends Migration
         Schema::create('loyalty_cards', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->foreignId('program_id')->constrained('loyalty_programs')->cascadeOnDelete();
-            $table->string('token', 32)->unique();
+            $table->string('token', 64)->unique();       // long, hard-to-harvest URL/QR secret
+            $table->string('code', 16)->unique();         // short, human-typeable counter code
             $table->unsignedBigInteger('user_id')->nullable()->index();
             $table->string('email')->nullable()->index();
             $table->string('phone')->nullable()->index();

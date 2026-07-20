@@ -7,6 +7,7 @@ namespace Database\Factories\Kurt\Modules\Loyalty;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Kurt\Modules\Loyalty\Models\Card;
 use Kurt\Modules\Loyalty\Models\Program;
+use Kurt\Modules\Loyalty\Support\CardCredentials;
 
 /**
  * @extends Factory<Card>
@@ -19,7 +20,8 @@ class CardFactory extends Factory
     {
         return [
             'program_id' => Program::factory(),
-            'token' => bin2hex(random_bytes(6)),
+            'token' => CardCredentials::token(),
+            'code' => CardCredentials::code(),
         ];
     }
 }
