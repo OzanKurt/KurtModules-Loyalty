@@ -13,6 +13,7 @@ it('creates all loyalty tables', function () {
         'loyalty_redemptions',
         'loyalty_wallet_passes',
         'loyalty_wallet_registrations',
+        'loyalty_program_tiers',
     ];
 
     foreach ($tables as $table) {

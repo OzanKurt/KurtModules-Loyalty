@@ -26,6 +26,7 @@ use Kurt\Modules\Loyalty\Enums\CardStatus;
  * @property int $stamps_count
  * @property int $rewards_earned
  * @property int $rewards_redeemed
+ * @property int $rewards_expired
  * @property CardStatus $status
  * @property Carbon|null $last_stamped_at
  * @property Program $program
@@ -48,6 +49,7 @@ class Card extends Model
         'stamps_count' => 0,
         'rewards_earned' => 0,
         'rewards_redeemed' => 0,
+        'rewards_expired' => 0,
         'status' => 'active',
     ];
 
@@ -57,6 +59,7 @@ class Card extends Model
         'stamps_count' => 'integer',
         'rewards_earned' => 'integer',
         'rewards_redeemed' => 'integer',
+        'rewards_expired' => 'integer',
     ];
 
     /** @return BelongsTo<Program, $this> */
@@ -90,7 +93,7 @@ class Card extends Model
 
     public function rewardsAvailable(): int
     {
-        return max(0, $this->rewards_earned - $this->rewards_redeemed);
+        return max(0, $this->rewards_earned - $this->rewards_redeemed - $this->rewards_expired);
     }
 
     /** @return CardFactory */

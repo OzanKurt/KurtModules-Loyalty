@@ -11,7 +11,8 @@ use Kurt\Modules\Loyalty\Services\StampService;
 it('registers no loyalty http routes in headless mode', function () {
     expect(Route::has('loyalty.card.state'))->toBeFalse()
         ->and(Route::has('loyalty.card.show'))->toBeFalse()
-        ->and(Route::has('loyalty.terminal.stamp'))->toBeFalse();
+        ->and(Route::has('loyalty.terminal.stamp'))->toBeFalse()
+        ->and(Route::has('loyalty.stats'))->toBeFalse();
 });
 
 it('still exposes the domain services in headless mode', function () {

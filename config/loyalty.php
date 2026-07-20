@@ -37,6 +37,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Stamp / reward expiry (defaults; per-program columns win)
+    |--------------------------------------------------------------------------
+    | Age (in days) after which the `loyalty:expire` command voids inactive
+    | stamps and unredeemed earned rewards. `null` = never expires (the default,
+    | matching pre-expiry behaviour). A program's `stamp_expiry_days` /
+    | `reward_expiry_days` columns override these when set.
+    */
+    'expiry' => [
+        'stamp_days' => env('LOYALTY_STAMP_EXPIRY_DAYS'),
+        'reward_days' => env('LOYALTY_REWARD_EXPIRY_DAYS'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | HTTP mode
     |--------------------------------------------------------------------------
     | Controls how much of the HTTP surface the package registers:

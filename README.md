@@ -27,9 +27,11 @@ Every other KurtModules package is headless + Filament-only with no public views
 ```bash
 composer require ozankurt/laravel-modules-loyalty
 php artisan loyalty:install   # publish config, migrations, views, assets
-php artisan migrate
+php artisan migrate            # creates loyalty_* tables incl. loyalty_program_tiers + the expiry columns
 php artisan loyalty:demo       # seed a program + card, prints the card URL
 ```
+
+`loyalty:install` publishes every migration, including the tier table (`loyalty_program_tiers`) and the expiry columns (`stamp_expiry_days` / `reward_expiry_days` on programs, `rewards_expired` on cards) — so a single `php artisan migrate` sets up the full schema.
 
 Define who staff are (the terminal is deny-all until you do):
 
@@ -80,9 +82,43 @@ Both providers are opt-in and only render buttons once configured. Env vars:
 - **Google:** `LOYALTY_GOOGLE_WALLET=true`, `LOYALTY_GOOGLE_ISSUER_ID`, `LOYALTY_GOOGLE_CLASS_ID`, `LOYALTY_GOOGLE_SERVICE_ACCOUNT` (path to the JSON key).
 - **Live push:** `LOYALTY_WALLET_PUSH=true` + a queue worker (Apple via APNs using the pass cert, Google via object PATCH). Run `php artisan loyalty:wallet-check` to verify.
 
-## Roadmap (not yet implemented)
+## Multi-tier rewards
 
-Stamp/reward expiry, analytics/reporting, and multi-tier rewards are natural next features, not present in v2.0.
+A program can define a ladder of `ProgramTier` rows (`loyalty_program_tiers`) instead of a single repeating goal. Each tier has an absolute `threshold` (cumulative stamp count), a `reward` label, an optional `reward_payload` JSON (voucher config / metadata), and a `position` for ordering:
+
+```php
+$program->tiers()->createMany([
+    ['threshold' => 3,  'reward' => ['en' => 'Free cookie'],   'position' => 1],
+    ['threshold' => 6,  'reward' => ['en' => 'Free coffee'],   'position' => 2],
+    ['threshold' => 10, 'reward' => ['en' => 'Free tumbler'],  'position' => 3],
+]);
+```
+
+When a stamp crossing meets the next unmet tier threshold, that tier's reward is credited to `rewards_earned` and a `TierReached` event (carrying the `Card` and `ProgramTier`) fires, alongside the existing `CardCompleted` event. A single multi-stamp voucher that vaults past several thresholds credits each crossed tier.
+
+**Fully backward compatible:** a program with *no* tier rows behaves exactly as before — the single `stamps_required` threshold, repeating, with the same rollover crediting for `reset_on_reward = false`.
+
+## Analytics
+
+`LoyaltyStatsService::overview(?int $programId, ?Carbon $since, ?Carbon $until)` returns cards issued, active cards, stamps granted, rewards earned/redeemed, and the redemption rate — overall (`totals`) and per program (`programs`) — from a handful of grouped aggregate queries (no N+1). The optional program filter and date range narrow the population.
+
+- **Command:** `php artisan loyalty:stats [--program=id|slug] [--since=date] [--until=date]` prints the breakdown as a table.
+- **Endpoint:** `GET /loyalty/stats` returns the same data as JSON for a consumer dashboard. It is behind the `loyalty:staff` gate and registered only in `api` and `ui` modes (never `headless`). Accepts `program`, `since`, `until` query params.
+
+## Stamp / reward expiry
+
+Stamps and unredeemed earned rewards can expire after a configurable window. Defaults live in `config/loyalty.php` under `expiry` (`LOYALTY_STAMP_EXPIRY_DAYS` / `LOYALTY_REWARD_EXPIRY_DAYS`), and each program can override them via its `stamp_expiry_days` / `reward_expiry_days` columns. `null` everywhere = **never expires** (today's behaviour).
+
+```bash
+php artisan loyalty:expire   # schedulable; safe to run repeatedly
+```
+
+The command voids (zeroes) stamps on cards whose last activity is older than `stamp_expiry_days`, and voids unredeemed earned rewards (tracked in the new `rewards_expired` counter, kept separate from redemptions so analytics stay accurate) older than `reward_expiry_days`. Each runs inside a locked transaction and fires `StampsExpired` / `RewardExpired`. It is idempotent — a second run is a no-op. Schedule it in the consuming app:
+
+```php
+// routes/console.php or the console kernel
+Schedule::command('loyalty:expire')->daily();
+```
 
 See [`docs/superpowers/specs`](docs/superpowers/specs) for the full design and [`docs/superpowers/plans`](docs/superpowers/plans) for the build plan.
 

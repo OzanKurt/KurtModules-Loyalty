@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Kurt\Modules\Loyalty\Http\Controllers\AppleWebServiceController;
 use Kurt\Modules\Loyalty\Http\Controllers\CardController;
+use Kurt\Modules\Loyalty\Http\Controllers\StatsController;
 use Kurt\Modules\Loyalty\Http\Controllers\TerminalController;
 use Kurt\Modules\Loyalty\Http\Controllers\WalletController;
 
@@ -39,6 +40,10 @@ Route::group([
         Route::post('stamp', [TerminalController::class, 'stamp'])->name('stamp');
         Route::post('redeem', [TerminalController::class, 'redeem'])->name('redeem');
     });
+
+    // Analytics JSON for a consumer dashboard. Behind the staff gate; available
+    // in both 'api' and 'ui' modes (never headless — the group isn't loaded).
+    Route::middleware($staff)->get('stats', [StatsController::class, 'index'])->name('stats');
 
     /*
     | UI surface — shipped HTML pages. Registered only in 'ui'.

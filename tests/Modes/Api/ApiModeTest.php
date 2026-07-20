@@ -12,6 +12,7 @@ it('registers the api endpoints but not the shipped html pages', function () {
         ->and(Route::has('loyalty.card.redeem-voucher'))->toBeTrue()
         ->and(Route::has('loyalty.card.apple'))->toBeTrue()
         ->and(Route::has('loyalty.terminal.stamp'))->toBeTrue()
+        ->and(Route::has('loyalty.stats'))->toBeTrue()
         ->and(Route::has('loyalty.card.show'))->toBeFalse()
         ->and(Route::has('loyalty.terminal.index'))->toBeFalse();
 });
