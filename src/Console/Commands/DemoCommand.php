@@ -12,12 +12,18 @@ use Kurt\Modules\Loyalty\Services\CardService;
 
 final class DemoCommand extends Command
 {
-    protected $signature = 'loyalty:demo {--stamps=7 : Stamps required for the demo program}';
+    protected $signature = 'loyalty:demo {--stamps=7 : Stamps required for the demo program} {--force : Allow running in production}';
 
     protected $description = 'Create a demo loyalty program and card, and print the card URL.';
 
     public function handle(CardService $cards): int
     {
+        if ($this->getLaravel()->isProduction() && ! $this->option('force')) {
+            $this->error('loyalty:demo seeds demo data and is blocked in production. Pass --force to override.');
+
+            return self::FAILURE;
+        }
+
         $program = Program::query()->create([
             'name' => ['en' => 'Demo Coffee Club'],
             'slug' => 'demo-'.Str::lower(Str::random(6)),

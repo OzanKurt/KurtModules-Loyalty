@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Kurt\Modules\Loyalty\Console\Commands\DemoCommand;
 use Kurt\Modules\Loyalty\Models\Card;
 use Kurt\Modules\Loyalty\Models\Program;
 use Kurt\Modules\Loyalty\Services\VoucherService;
@@ -23,6 +24,12 @@ it('creates a demo program and card', function () {
     expect(Program::query()->count())->toBe(1)
         ->and(Card::query()->count())->toBe(1)
         ->and(Program::query()->first()->stamps_required)->toBe(5);
+});
+
+it('exposes a --force flag to override the production guard', function () {
+    $definition = (new DemoCommand)->getDefinition();
+
+    expect($definition->hasOption('force'))->toBeTrue();
 });
 
 it('reports wallet configuration', function () {
