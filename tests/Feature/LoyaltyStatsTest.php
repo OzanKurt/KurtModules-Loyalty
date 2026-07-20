@@ -64,11 +64,32 @@ it('serves the stats endpoint as json to staff', function () {
     Gate::define('loyalty:staff', fn ($user = null) => true);
     seedStats();
 
+    // The stats endpoint adopts the shared Core envelope: the aggregate payload
+    // is wrapped under `data`.
     $this->getJson(route('loyalty.stats'))
         ->assertOk()
-        ->assertJsonPath('totals.cards_issued', 3)
-        ->assertJsonPath('totals.stamps_granted', 4)
-        ->assertJsonStructure(['range', 'totals', 'programs']);
+        ->assertJsonPath('data.totals.cards_issued', 3)
+        ->assertJsonPath('data.totals.stamps_granted', 4)
+        ->assertJsonStructure(['data' => ['range', 'totals', 'programs']]);
+});
+
+it('wraps the stats payload in the core envelope', function () {
+    Gate::define('loyalty:staff', fn ($user = null) => true);
+    seedStats();
+
+    $response = $this->getJson(route('loyalty.stats'))->assertOk();
+
+    // Envelope contract: a single top-level `data` key, no bare `totals`.
+    expect(array_keys($response->json()))->toBe(['data']);
+});
+
+it('returns the core error envelope for an unknown program filter', function () {
+    Gate::define('loyalty:staff', fn ($user = null) => true);
+
+    $this->getJson(route('loyalty.stats', ['program' => 'does-not-exist']))
+        ->assertNotFound()
+        ->assertJsonPath('message', 'Program not found.')
+        ->assertJsonStructure(['message', 'errors']);
 });
 
 it('blocks the stats endpoint when the staff gate is undefined', function () {

@@ -62,6 +62,13 @@ return [
     */
     'http' => [
         'mode' => env('LOYALTY_HTTP_MODE', 'ui'),
+
+        // Budget for the shared Core "loyalty-api" rate limiter
+        // (Kurt\Modules\Core\Support\ApiRateLimiter), in
+        // "maxAttempts,decayMinutes" form. Applied to the staff terminal
+        // stamp/redeem endpoints as `throttle:loyalty-api`. Defaults to the
+        // module's historic terminal budget so protection is unchanged.
+        'rate_limit' => env('LOYALTY_HTTP_RATE_LIMIT', '60,1'),
     ],
 
     /*
@@ -75,8 +82,8 @@ return [
         'middleware' => ['web'],
         // Applied to public write endpoints (create / claim / voucher redeem).
         'rate_limit' => '30,1',
-        // Applied to the staff terminal stamp/redeem endpoints.
-        'terminal_rate_limit' => '60,1',
+        // The staff terminal stamp/redeem endpoints now throttle via the shared
+        // Core limiter; tune their budget with `loyalty.http.rate_limit` above.
     ],
 
     /*

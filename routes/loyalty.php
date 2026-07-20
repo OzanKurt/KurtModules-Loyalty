@@ -19,7 +19,9 @@ Route::group([
 ], function () use ($mode) {
     $rateLimit = 'throttle:'.config('loyalty.routes.rate_limit', '30,1');
     $staff = config('loyalty.staff.middleware', ['can:loyalty:staff']);
-    $terminal = array_merge((array) $staff, ['throttle:'.config('loyalty.routes.terminal_rate_limit', '60,1')]);
+    // Staff terminal throttles via the shared Core limiter (budget lives in
+    // `loyalty.http.rate_limit`; registered by the service provider).
+    $terminal = array_merge((array) $staff, ['throttle:loyalty-api']);
 
     /*
     | API surface — JSON + resource endpoints. Registered in both 'api' and 'ui'.
