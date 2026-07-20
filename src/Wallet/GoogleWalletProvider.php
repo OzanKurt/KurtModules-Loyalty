@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kurt\Modules\Loyalty\Wallet;
 
+use Illuminate\Support\Facades\Http;
 use Kurt\Modules\Loyalty\Contracts\WalletProvider;
 use Kurt\Modules\Loyalty\Exceptions\WalletNotConfiguredException;
 use Kurt\Modules\Loyalty\Models\Card;
@@ -110,8 +111,40 @@ final class GoogleWalletProvider implements WalletProvider
 
     public function pushUpdate(Card $card): void
     {
-        // Live update patches the loyalty object via the Google Wallet API.
-        // Opt-in; a no-op until the app supplies API credentials + a queue.
+        if (! $this->isConfigured()) {
+            return;
+        }
+
+        $object = $this->buildPass($card);
+        $base = rtrim((string) $this->config['api_base'], '/');
+
+        Http::withToken($this->accessToken())
+            ->patch($base.'/loyaltyObject/'.$object['id'], $object);
+    }
+
+    /**
+     * Obtain an OAuth2 access token via the service-account JWT-bearer grant.
+     */
+    private function accessToken(): string
+    {
+        $account = $this->serviceAccount();
+        $endpoint = (string) $this->config['token_endpoint'];
+        $now = time();
+
+        $assertion = $this->encodeRs256([
+            'iss' => $account['client_email'],
+            'scope' => 'https://www.googleapis.com/auth/wallet_object.issuer',
+            'aud' => $endpoint,
+            'iat' => $now,
+            'exp' => $now + 3600,
+        ], (string) $account['private_key']);
+
+        $response = Http::asForm()->post($endpoint, [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $assertion,
+        ]);
+
+        return (string) $response->json('access_token');
     }
 
     /**

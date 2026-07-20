@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
+use Kurt\Modules\Loyalty\Http\Controllers\AppleWebServiceController;
 use Kurt\Modules\Loyalty\Http\Controllers\CardController;
 use Kurt\Modules\Loyalty\Http\Controllers\TerminalController;
 use Kurt\Modules\Loyalty\Http\Controllers\WalletController;
@@ -48,3 +49,19 @@ Route::group([
         Route::middleware($staff)->get('terminal', [TerminalController::class, 'index'])->name('terminal.index');
     }
 });
+
+/*
+| Apple Wallet web service (PassKit) — used for live pass updates. Stateless:
+| registered outside the `web` middleware group (no session/CSRF); auth is the
+| ApplePass token header handled in the controller.
+*/
+Route::prefix(config('loyalty.routes.prefix').'/apple/v1')
+    ->domain(config('loyalty.routes.domain'))
+    ->as('loyalty.apple.')
+    ->group(function () {
+        Route::post('devices/{device}/registrations/{passType}/{serial}', [AppleWebServiceController::class, 'register'])->name('register');
+        Route::delete('devices/{device}/registrations/{passType}/{serial}', [AppleWebServiceController::class, 'unregister'])->name('unregister');
+        Route::get('devices/{device}/registrations/{passType}', [AppleWebServiceController::class, 'serials'])->name('serials');
+        Route::get('passes/{passType}/{serial}', [AppleWebServiceController::class, 'pass'])->name('pass');
+        Route::post('log', [AppleWebServiceController::class, 'log'])->name('log');
+    });

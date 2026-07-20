@@ -19,6 +19,9 @@
         <testsuite name="Modes">
             <directory>tests/Modes</directory>
         </testsuite>
+        <testsuite name="Push">
+            <directory>tests/Push</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

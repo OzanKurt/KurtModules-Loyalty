@@ -120,6 +120,11 @@ return [
             'certificate_password' => env('LOYALTY_APPLE_CERTIFICATE_PASSWORD', ''),
             'wwdr_certificate' => env('LOYALTY_APPLE_WWDR_CERTIFICATE'),
             'icon' => env('LOYALTY_APPLE_ICON'),
+            // Absolute HTTPS base Apple devices call back to; defaults to the
+            // package's /apple web-service route under the app URL.
+            'web_service_url' => env('LOYALTY_APPLE_WEB_SERVICE_URL'),
+            // APNs (cert-based, reuses the Pass Type ID certificate above).
+            'apns_host' => env('LOYALTY_APNS_HOST', 'https://api.push.apple.com'),
         ],
 
         'google' => [
@@ -127,6 +132,8 @@ return [
             'issuer_id' => env('LOYALTY_GOOGLE_ISSUER_ID'),
             'class_id' => env('LOYALTY_GOOGLE_CLASS_ID'),
             'service_account' => env('LOYALTY_GOOGLE_SERVICE_ACCOUNT'),
+            'token_endpoint' => env('LOYALTY_GOOGLE_TOKEN_ENDPOINT', 'https://oauth2.googleapis.com/token'),
+            'api_base' => env('LOYALTY_GOOGLE_API_BASE', 'https://walletobjects.googleapis.com/walletobjects/v1'),
         ],
     ],
 ];

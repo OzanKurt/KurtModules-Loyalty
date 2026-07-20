@@ -4,6 +4,13 @@ All notable changes to `ozankurt/laravel-modules-loyalty` will be documented in 
 
 ## Unreleased
 
+### Added (hardening round 2)
+- **Terminal rate limiting** — the staff terminal stamp/redeem endpoints get their own `loyalty.routes.terminal_rate_limit` throttle.
+- **Idempotency keys** — stamp/redeem accept an `Idempotency-Key` header (or `idempotency_key` field); a key seen within `loyalty.idempotency.ttl` is a replay and is not re-applied. The JS terminal disables buttons in-flight and sends a key per gesture, so double-taps beyond the cooldown can't add extra stamps.
+- **i18n** — shipped terminal + wallet strings moved to `lang/{en,tr}/messages.php` under a clean `loyalty::` namespace (publishable).
+- **Accessibility** — card page gets `aria-live` progress, `role="img"` + labels on the stamp grid and QR, a labelled terminal input, and a `prefers-reduced-motion` guard on the stamp animation.
+- **Wallet live push (implemented)** — replaces the stub: Apple Wallet web service (device register/unregister/serials/pass/log with ApplePass-token auth) + cert-based APNs sender, and Google loyalty-object PATCH via an OAuth2 service-account token. A queued `PushWalletUpdate` job runs on stamp/complete/redeem events when `LOYALTY_WALLET_PUSH=true`.
+
 ### Security
 - **Split card identifiers.** The public URL/QR now uses a long 128-bit `token` (hard to harvest or enumerate), while a short human-typeable `code` is used for counter/manual lookup at the staff-gated terminal. Sharing a card link stays frictionless; the shareable value is no longer a short, guessable string.
 - **One-time claim.** In `anonymous_claimable` mode a card can no longer be re-claimed once an identity is attached, so knowing a token can't be used to hijack an already-claimed card (`CardAlreadyClaimedException`, HTTP 409).

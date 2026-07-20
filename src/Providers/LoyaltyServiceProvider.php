@@ -13,6 +13,7 @@ use Kurt\Modules\Loyalty\Console\Commands\WalletCheckCommand;
 use Kurt\Modules\Loyalty\Events\CardCompleted;
 use Kurt\Modules\Loyalty\Events\RewardRedeemed;
 use Kurt\Modules\Loyalty\Events\StampAdded;
+use Kurt\Modules\Loyalty\Jobs\PushWalletUpdate;
 use Kurt\Modules\Loyalty\Wallet\WalletManager;
 use Spatie\LaravelPackageTools\Package;
 
@@ -113,14 +114,7 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
         Event::listen(
             [StampAdded::class, CardCompleted::class, RewardRedeemed::class],
             function (StampAdded|CardCompleted|RewardRedeemed $event): void {
-                $wallet = $this->app->make(WalletManager::class);
-
-                if ($wallet->appleEnabled()) {
-                    $wallet->apple()->pushUpdate($event->card);
-                }
-                if ($wallet->googleEnabled()) {
-                    $wallet->google()->pushUpdate($event->card);
-                }
+                PushWalletUpdate::dispatch($event->card);
             },
         );
     }

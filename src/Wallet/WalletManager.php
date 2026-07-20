@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Kurt\Modules\Loyalty\Wallet;
 
 use Illuminate\Contracts\Config\Repository;
+use Kurt\Modules\Loyalty\Models\Card;
+use Kurt\Modules\Loyalty\Models\WalletPass;
 
 final class WalletManager
 {
@@ -57,5 +59,37 @@ final class WalletManager
         }
 
         return $platforms;
+    }
+
+    public function pushEnabled(): bool
+    {
+        return (bool) config('loyalty.wallet.push', false);
+    }
+
+    /**
+     * Get-or-create the tracked Apple pass row for a card (serial + auth token).
+     */
+    public function ensureApplePass(Card $card): WalletPass
+    {
+        /** @var WalletPass $pass */
+        $pass = WalletPass::query()->firstOrCreate(
+            ['card_id' => $card->getKey(), 'platform' => 'apple'],
+            ['external_id' => $this->apple->serialFor($card), 'auth_token' => bin2hex(random_bytes(16))],
+        );
+
+        return $pass;
+    }
+
+    /**
+     * Absolute HTTPS base Apple Wallet devices call back to.
+     */
+    public function appleWebServiceUrl(): string
+    {
+        $configured = config('loyalty.wallet.apple.web_service_url');
+        $base = is_string($configured) && $configured !== ''
+            ? $configured
+            : url((string) config('loyalty.routes.prefix', 'loyalty').'/apple');
+
+        return rtrim($base, '/');
     }
 }

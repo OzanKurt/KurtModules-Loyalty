@@ -20,7 +20,7 @@ Every other KurtModules package is headless + Filament-only with no public views
 - **M1** — package foundation, schema, models/factories, domain services (Card, Voucher, Stamp, Redemption).
 - **M2** — HTTP surface: customer card routes, `/state` JSON, voucher redemption, staff terminal behind the `loyalty:staff` gate, rate limiting.
 - **M3** — frontend: vanilla-JS behavior layer (data-attribute contract), Vite build with committed `dist`, contract stylesheet + `coffee`/`hotdog`/`restaurant`/`minimal` themes (light + dark). QR codes render server-side as inline SVG (`bacon/bacon-qr-code`), so they work without JavaScript.
-- **M4** — Apple `.pkpass` + Google Wallet providers behind a `WalletProvider` seam, add-to-wallet endpoints + buttons, live-push seam (opt-in), and artisan commands (`loyalty:install`, `loyalty:demo`, `loyalty:prune-vouchers`, `loyalty:wallet-check`).
+- **M4** — Apple `.pkpass` + Google Wallet providers behind a `WalletProvider` seam, add-to-wallet endpoints + buttons, **live push** (Apple Wallet web service + APNs, Google object PATCH) via a queued job on card events, and artisan commands (`loyalty:install`, `loyalty:demo`, `loyalty:prune-vouchers`, `loyalty:wallet-check`).
 
 ## Quick start
 

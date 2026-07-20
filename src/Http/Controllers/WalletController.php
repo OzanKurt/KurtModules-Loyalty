@@ -21,9 +21,15 @@ class WalletController extends Controller
 
         $card = $this->resolveCard($token);
 
-        return response($wallet->apple()->pkpass($card))
+        // When live push is enabled, embed the web-service URL + this pass's
+        // auth token so the device can register for updates.
+        $pass = $wallet->ensureApplePass($card);
+        $webServiceUrl = $wallet->pushEnabled() ? $wallet->appleWebServiceUrl() : null;
+        $authToken = $wallet->pushEnabled() ? $pass->auth_token : null;
+
+        return response($wallet->apple()->pkpass($card, $webServiceUrl, $authToken))
             ->header('Content-Type', 'application/vnd.apple.pkpass')
-            ->header('Content-Disposition', 'attachment; filename="'.$card->token.'.pkpass"');
+            ->header('Content-Disposition', 'attachment; filename="'.$card->code.'.pkpass"');
     }
 
     public function google(string $token, WalletManager $wallet): RedirectResponse

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Kurt\Modules\Loyalty\Wallet;
 
+use Illuminate\Support\Facades\Http;
 use Kurt\Modules\Loyalty\Contracts\WalletProvider;
 use Kurt\Modules\Loyalty\Exceptions\WalletNotConfiguredException;
 use Kurt\Modules\Loyalty\Models\Card;
+use Kurt\Modules\Loyalty\Models\WalletRegistration;
 use Kurt\Modules\Loyalty\Support\CardState;
 use ZipArchive;
 
@@ -40,11 +42,11 @@ final class AppleWalletProvider implements WalletProvider
     /**
      * @return array<string, mixed>
      */
-    public function buildPass(Card $card): array
+    public function buildPass(Card $card, ?string $webServiceUrl = null, ?string $authToken = null): array
     {
         $state = CardState::for($card);
 
-        return [
+        $pass = [
             'formatVersion' => 1,
             'passTypeIdentifier' => (string) ($this->config['pass_type_id'] ?? ''),
             'teamIdentifier' => (string) ($this->config['team_id'] ?? ''),
@@ -79,18 +81,26 @@ final class AppleWalletProvider implements WalletProvider
                 ]],
             ],
         ];
+
+        // Live-update fields — present only when push is wired for this pass.
+        if ($webServiceUrl !== null && $authToken !== null) {
+            $pass['webServiceURL'] = $webServiceUrl;
+            $pass['authenticationToken'] = $authToken;
+        }
+
+        return $pass;
     }
 
     /**
      * Build a signed `.pkpass` archive and return its raw bytes.
      */
-    public function pkpass(Card $card): string
+    public function pkpass(Card $card, ?string $webServiceUrl = null, ?string $authToken = null): string
     {
         if (! $this->isConfigured()) {
             throw new WalletNotConfiguredException('Apple Wallet is not configured.');
         }
 
-        $pass = json_encode($this->buildPass($card), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $pass = json_encode($this->buildPass($card, $webServiceUrl, $authToken), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if ($pass === false) {
             throw new WalletNotConfiguredException('Unable to encode pass payload.');
         }
@@ -118,9 +128,60 @@ final class AppleWalletProvider implements WalletProvider
 
     public function pushUpdate(Card $card): void
     {
-        // Live push over the Apple Wallet web service (APNs) is opt-in and
-        // requires a configured web service URL + push credentials + queue.
-        // Intentionally a no-op until that infrastructure is wired by the app.
+        if (! $this->isConfigured()) {
+            return;
+        }
+
+        $serial = $this->serialFor($card);
+        $tokens = WalletRegistration::query()->where('pass_serial', $serial)->pluck('push_token')->all();
+        if ($tokens === []) {
+            return;
+        }
+
+        [$certPem, $keyPem] = $this->certPemFiles();
+        $host = rtrim((string) $this->config['apns_host'], '/');
+
+        try {
+            foreach ($tokens as $deviceToken) {
+                // Empty APNs background push; the device then re-fetches the pass.
+                Http::withOptions([
+                    'cert' => $certPem,
+                    'ssl_key' => $keyPem,
+                    'version' => 2.0,
+                ])->withHeaders([
+                    'apns-topic' => (string) $this->config['pass_type_id'],
+                    'apns-push-type' => 'background',
+                    'apns-priority' => '5',
+                ])->post($host.'/3/device/'.$deviceToken, ['aps' => (object) []]);
+            }
+        } finally {
+            @unlink($certPem);
+            @unlink($keyPem);
+        }
+    }
+
+    /**
+     * Extract the pass certificate + private key into temp PEM files for
+     * cert-based APNs (Guzzle `cert`/`ssl_key`). Returns [certPath, keyPath].
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function certPemFiles(): array
+    {
+        $certPath = (string) $this->config['certificate'];
+        $password = (string) ($this->config['certificate_password'] ?? '');
+
+        $certs = [];
+        if (! is_file($certPath) || ! openssl_pkcs12_read((string) file_get_contents($certPath), $certs, $password)) {
+            throw new WalletNotConfiguredException('Unable to read the Apple certificate for APNs.');
+        }
+
+        $certPem = (string) tempnam(sys_get_temp_dir(), 'lm_apns_cert_');
+        $keyPem = (string) tempnam(sys_get_temp_dir(), 'lm_apns_key_');
+        file_put_contents($certPem, $certs['cert']);
+        file_put_contents($keyPem, $certs['pkey']);
+
+        return [$certPem, $keyPem];
     }
 
     private function sign(string $manifest): string
