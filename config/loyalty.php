@@ -37,6 +37,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | HTTP mode
+    |--------------------------------------------------------------------------
+    | Controls how much of the HTTP surface the package registers:
+    |   'headless' - nothing; call the domain services yourself.
+    |   'api'      - JSON + resource endpoints only (state, create, claim,
+    |                voucher redeem, terminal stamp/redeem, wallet passes).
+    |   'ui'       - everything in 'api' PLUS the shipped HTML card page and
+    |                staff terminal, and publishable views/assets.
+    */
+    'http' => [
+        'mode' => env('LOYALTY_HTTP_MODE', 'ui'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | HTTP routes
     |--------------------------------------------------------------------------
     */

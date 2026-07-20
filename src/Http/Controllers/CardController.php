@@ -23,10 +23,15 @@ use Kurt\Modules\Loyalty\Wallet\WalletManager;
 
 class CardController extends Controller
 {
-    public function show(string $token, WalletManager $wallet): View
+    public function show(Request $request, string $token, WalletManager $wallet): View|JsonResponse
     {
         $card = $this->resolveCard($token);
         $state = CardState::for($card);
+
+        // Even on the UI page route, honour an explicit JSON request.
+        if ($request->wantsJson()) {
+            return response()->json($state);
+        }
 
         return view('loyalty::card', [
             'state' => $state,

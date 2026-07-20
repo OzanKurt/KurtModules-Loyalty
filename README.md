@@ -40,6 +40,18 @@ Gate::define('loyalty:staff', fn ($user) => $user->is_staff);
 
 Wallet passes are opt-in — set the Apple certificate / Google service-account env vars, then `php artisan loyalty:wallet-check`. Live pass updates need `LOYALTY_WALLET_PUSH=true` plus a queue worker.
 
+## HTTP modes
+
+Pick how much of the HTTP surface the package registers with `LOYALTY_HTTP_MODE` (config `loyalty.http.mode`). The domain services + events are always available regardless — the controllers are a thin adapter over them, never the source of truth.
+
+| Mode | Registers | Use when |
+|---|---|---|
+| `ui` (default) | JSON/resource endpoints **+ shipped HTML card page & terminal + views/assets** | You want the full Mars-style experience out of the box. |
+| `api` | JSON + resource endpoints only (state, create, claim, voucher redeem, terminal stamp/redeem, wallet passes). No Blade, no assets. | You're building your own frontend but want the HTTP layer. |
+| `headless` | Nothing. | You want to wire your own routes/controllers and call `CardService` / `StampService` / `VoucherService` / `RedemptionService` directly. |
+
+`ui` ⊇ `api`. Even in `ui`, the card page route honours `Accept: application/json` and returns state instead of HTML.
+
 ## Frontend
 
 The behavior layer is framework-free and keyed to a stable `data-*` attribute contract, so the entire stylesheet is swappable without touching JS. Rebuild/extend it with your own pipeline:

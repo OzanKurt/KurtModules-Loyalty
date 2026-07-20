@@ -25,13 +25,13 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
 
     public function configurePackage(Package $package): void
     {
+        // Non-HTTP concerns are always registered. The HTTP surface (routes,
+        // views, assets) is registered in packageBooted() where config is
+        // reliable, gated by the `loyalty.http.mode` setting.
         $package
             ->name('laravel-modules-loyalty')
             ->hasConfigFile('loyalty')
             ->hasTranslations()
-            ->hasViews('loyalty')
-            ->hasAssets()
-            ->hasRoute('loyalty')
             ->hasMigrations([
                 'create_loyalty_programs_table',
                 'create_loyalty_cards_table',
@@ -56,7 +56,39 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
+        $this->registerHttp();
         $this->registerWalletPush();
+    }
+
+    /**
+     * Register the HTTP surface according to `loyalty.http.mode`:
+     *   headless -> nothing; api -> routes only; ui -> routes + views + assets.
+     */
+    private function registerHttp(): void
+    {
+        $mode = (string) config('loyalty.http.mode', 'ui');
+
+        if ($mode === 'headless') {
+            return;
+        }
+
+        $this->loadRoutesFrom(__DIR__.'/../../routes/loyalty.php');
+
+        if ($mode !== 'ui') {
+            return;
+        }
+
+        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'loyalty');
+
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../../resources/views' => resource_path('views/vendor/loyalty'),
+            ], 'modules-loyalty-views');
+
+            $this->publishes([
+                __DIR__.'/../../resources/dist' => public_path('vendor/modules-loyalty'),
+            ], 'modules-loyalty-assets');
+        }
     }
 
     /**
