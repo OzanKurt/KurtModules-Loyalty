@@ -48,8 +48,14 @@ final class StampService
 
             event(new StampAdded($card, $source));
 
-            if ($before < $required && ($before + 1) >= $required) {
-                $card->forceFill(['rewards_earned' => $card->rewards_earned + 1])->save();
+            // Credit every reward threshold crossed by this stamp — not just the
+            // first — so rollover cards (reset_on_reward = false) that reach a
+            // multiple of stamps_required without an intervening redemption earn
+            // each reward. In reset mode this still credits exactly once per goal.
+            $after = $before + 1;
+            $earned = $required > 0 ? intdiv($after, $required) - intdiv($before, $required) : 0;
+            if ($earned > 0) {
+                $card->forceFill(['rewards_earned' => $card->rewards_earned + $earned])->save();
                 event(new CardCompleted($card));
             }
 

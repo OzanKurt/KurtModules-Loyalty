@@ -25,7 +25,7 @@ class AppleWebServiceController extends Controller
     {
         $this->authenticate($request, $serial);
 
-        WalletRegistration::query()->firstOrCreate(
+        WalletRegistration::query()->updateOrCreate(
             ['device_library_id' => $device, 'pass_serial' => $serial],
             ['push_token' => (string) $request->input('pushToken')],
         );

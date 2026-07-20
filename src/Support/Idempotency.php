@@ -20,13 +20,15 @@ final class Idempotency
     }
 
     /**
-     * Atomically claim a key. Returns true the first time it is seen (proceed)
-     * and false on a replay within the TTL (skip re-applying the action).
+     * Atomically claim a key within a scope. Returns true the first time the
+     * (scope, key) pair is seen (proceed) and false on a replay within the TTL.
+     * The scope (e.g. "stamp:{cardId}") keeps distinct actions/cards from
+     * colliding when a client reuses one Idempotency-Key across requests.
      */
-    public static function claim(string $key): bool
+    public static function claim(string $key, string $scope = ''): bool
     {
         $ttl = (int) config('loyalty.idempotency.ttl', 60);
 
-        return Cache::add('loyalty:idem:'.sha1($key), true, $ttl);
+        return Cache::add('loyalty:idem:'.sha1($scope.'|'.$key), true, $ttl);
     }
 }

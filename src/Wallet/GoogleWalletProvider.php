@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kurt\Modules\Loyalty\Wallet;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Kurt\Modules\Loyalty\Contracts\WalletProvider;
 use Kurt\Modules\Loyalty\Exceptions\WalletNotConfiguredException;
@@ -129,22 +130,30 @@ final class GoogleWalletProvider implements WalletProvider
     {
         $account = $this->serviceAccount();
         $endpoint = (string) $this->config['token_endpoint'];
-        $now = time();
 
-        $assertion = $this->encodeRs256([
-            'iss' => $account['client_email'],
-            'scope' => 'https://www.googleapis.com/auth/wallet_object.issuer',
-            'aud' => $endpoint,
-            'iat' => $now,
-            'exp' => $now + 3600,
-        ], (string) $account['private_key']);
+        // Cache the token (~55m) so a burst of pushes doesn't re-mint one each time.
+        return Cache::remember(
+            'loyalty:google:token:'.sha1($account['client_email']),
+            3300,
+            function () use ($account, $endpoint): string {
+                $now = time();
 
-        $response = Http::asForm()->post($endpoint, [
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $assertion,
-        ]);
+                $assertion = $this->encodeRs256([
+                    'iss' => $account['client_email'],
+                    'scope' => 'https://www.googleapis.com/auth/wallet_object.issuer',
+                    'aud' => $endpoint,
+                    'iat' => $now,
+                    'exp' => $now + 3600,
+                ], (string) $account['private_key']);
 
-        return (string) $response->json('access_token');
+                $response = Http::asForm()->post($endpoint, [
+                    'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                    'assertion' => $assertion,
+                ]);
+
+                return (string) $response->json('access_token');
+            },
+        );
     }
 
     /**

@@ -71,6 +71,28 @@ it('lets the staff terminal resolve a card by its short code', function () {
         ->assertJsonPath('stamps_count', 1);
 });
 
+it('does not resolve a soft-deleted card at the terminal', function () {
+    Gate::define('loyalty:staff', fn ($user = null) => true);
+    $card = Card::factory()->for($this->program)->create();
+    $card->delete();
+
+    $this->postJson(route('loyalty.terminal.stamp'), ['card_token' => $card->code])
+        ->assertNotFound();
+});
+
+it('scopes the idempotency key by action so a stamp key does not block a redeem', function () {
+    Gate::define('loyalty:staff', fn ($user = null) => true);
+    $program = Program::factory()->create(['stamps_required' => 1, 'cooldown_seconds' => 0]);
+    $card = Card::factory()->for($program)->create();
+    $headers = ['Idempotency-Key' => 'shared-key'];
+
+    $this->postJson(route('loyalty.terminal.stamp'), ['card_token' => $card->code], $headers)
+        ->assertOk()->assertJsonPath('stamps_count', 1);
+    // Same key, different action — must act, not be treated as a replay.
+    $this->postJson(route('loyalty.terminal.redeem'), ['card_token' => $card->code], $headers)
+        ->assertOk()->assertJsonPath('rewards_redeemed', 1);
+});
+
 it('does not double-apply a stamp for a repeated idempotency key', function () {
     Gate::define('loyalty:staff', fn ($user = null) => true);
     $card = Card::factory()->for($this->program)->create();

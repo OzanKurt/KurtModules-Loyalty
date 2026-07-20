@@ -56,6 +56,22 @@ it('fires CardCompleted and credits rewards_earned once when reaching the goal',
     Event::assertDispatched(CardCompleted::class, 1);
 });
 
+it('credits a second reward for a rollover card that crosses two goals without redeeming', function () {
+    $program = Program::factory()->create([
+        'stamps_required' => 2,
+        'cooldown_seconds' => 0,
+        'reset_on_reward' => false,
+    ]);
+    $card = Card::factory()->for($program)->create();
+
+    foreach (range(1, 4) as $i) {
+        app(StampService::class)->add($card, source: StampSource::Manual);
+    }
+
+    expect($card->refresh()->rewards_earned)->toBe(2)
+        ->and($card->stamps_count)->toBe(4);
+});
+
 it('does not re-credit when stamps continue past the goal without redemption', function () {
     $program = Program::factory()->create(['stamps_required' => 2, 'cooldown_seconds' => 0]);
     $card = Card::factory()->for($program)->create();

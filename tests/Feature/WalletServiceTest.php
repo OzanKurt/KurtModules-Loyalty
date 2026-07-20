@@ -31,6 +31,17 @@ it('registers a device for pass updates with a valid ApplePass token', function 
         ->exists())->toBeTrue();
 });
 
+it('updates the push token when a device re-registers', function () {
+    $args = ['device' => 'dev-1', 'passType' => 'pass.com.x', 'serial' => $this->card->token];
+    $auth = ['Authorization' => 'ApplePass secret-token'];
+
+    $this->postJson(route('loyalty.apple.register', $args), ['pushToken' => 'first'], $auth)->assertCreated();
+    $this->postJson(route('loyalty.apple.register', $args), ['pushToken' => 'second'], $auth)->assertCreated();
+
+    expect(WalletRegistration::query()->where('device_library_id', 'dev-1')->count())->toBe(1)
+        ->and(WalletRegistration::query()->where('device_library_id', 'dev-1')->first()->push_token)->toBe('second');
+});
+
 it('rejects device registration with a bad token', function () {
     $this->postJson(
         route('loyalty.apple.register', ['device' => 'dev-1', 'passType' => 'pass.com.x', 'serial' => $this->card->token]),
