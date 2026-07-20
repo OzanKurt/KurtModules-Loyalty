@@ -6,6 +6,7 @@ namespace Kurt\Modules\Loyalty\Providers;
 
 use Illuminate\Support\Facades\Event;
 use Kurt\Modules\Core\Providers\PackageServiceProvider;
+use Kurt\Modules\Core\Support\ApiRateLimiter;
 use Kurt\Modules\Loyalty\Console\Commands\DemoCommand;
 use Kurt\Modules\Loyalty\Console\Commands\ExpireCommand;
 use Kurt\Modules\Loyalty\Console\Commands\InstallCommand;
@@ -87,6 +88,11 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
         if ($mode === 'headless') {
             return;
         }
+
+        // Register the shared Core "loyalty-api" limiter before routes load so
+        // `throttle:loyalty-api` (staff terminal) resolves it at request time,
+        // even when the app's routes are cached.
+        ApiRateLimiter::register($this->module());
 
         $this->loadRoutesFrom(__DIR__.'/../../routes/loyalty.php');
 

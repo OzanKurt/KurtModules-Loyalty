@@ -7,7 +7,7 @@ namespace Kurt\Modules\Loyalty\Http\Controllers;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use Kurt\Modules\Core\Http\Controllers\ApiController;
 use Kurt\Modules\Loyalty\Enums\StampSource;
 use Kurt\Modules\Loyalty\Exceptions\DailyStampLimitReachedException;
 use Kurt\Modules\Loyalty\Exceptions\NoRewardAvailableException;
@@ -18,7 +18,7 @@ use Kurt\Modules\Loyalty\Services\StampService;
 use Kurt\Modules\Loyalty\Support\CardState;
 use Kurt\Modules\Loyalty\Support\Idempotency;
 
-class TerminalController extends Controller
+class TerminalController extends ApiController
 {
     public function index(): View
     {

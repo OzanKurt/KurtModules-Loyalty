@@ -7,7 +7,7 @@ namespace Kurt\Modules\Loyalty\Http\Controllers;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use Kurt\Modules\Core\Http\Controllers\ApiController;
 use Kurt\Modules\Loyalty\Exceptions\CardAlreadyClaimedException;
 use Kurt\Modules\Loyalty\Exceptions\CardNotClaimableException;
 use Kurt\Modules\Loyalty\Exceptions\VoucherAlreadyRedeemedException;
@@ -21,7 +21,7 @@ use Kurt\Modules\Loyalty\Support\CardState;
 use Kurt\Modules\Loyalty\Support\QrCode;
 use Kurt\Modules\Loyalty\Wallet\WalletManager;
 
-class CardController extends Controller
+class CardController extends ApiController
 {
     public function show(Request $request, string $token, WalletManager $wallet): View|JsonResponse
     {

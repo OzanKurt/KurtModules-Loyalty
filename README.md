@@ -14,6 +14,7 @@ Every other KurtModules package is headless + Filament-only with no public views
 - **Unified voucher primitive.** Every stamp is granted by redeeming a single-use `Voucher` — whether issued by a staff terminal, printed on a receipt, or shown as a till QR.
 - **Configurable identity.** Cards can be anonymous (Mars-style), user-bound, or anonymous-then-claimable — chosen per install.
 - **Wallet via an adapter seam.** Apple `.pkpass` + Google Wallet behind one `WalletProvider` interface; live-updating passes are opt-in (certs/service account are the consuming app's to supply).
+- **Built on the shared Core API kit.** The JSON controllers extend Core's `ApiController`, and the staff terminal throttles through Core's shared `ApiRateLimiter` (`throttle:loyalty-api`), so Loyalty rides the same HTTP foundation as every other module. The `loyalty.http.mode` contract (`headless`/`api`/`ui`) maps directly onto Core's `HttpMode` — same string values, same semantics. Customer-facing bodies (the card `/state` JSON, terminal stamp/redeem, wallet/PassKit payloads) keep their exact historic shape; the Core success/error envelope (`{ "data": … }` / `{ "message": …, "errors": … }`) is adopted on the staff analytics endpoint (`GET /loyalty/stats`).
 
 ## Status — all milestones landed ✅
 
@@ -53,6 +54,8 @@ Pick how much of the HTTP surface the package registers with `LOYALTY_HTTP_MODE`
 | `headless` | Nothing. | You want to wire your own routes/controllers and call `CardService` / `StampService` / `VoucherService` / `RedemptionService` directly. |
 
 `ui` ⊇ `api`. Even in `ui`, the card page route honours `Accept: application/json` and returns state instead of HTML.
+
+`loyalty.http.mode` resolves through Core's `Kurt\Modules\Core\Http\HttpMode` enum (identical `headless`/`api`/`ui` string values). The staff terminal's throttle budget lives in `loyalty.http.rate_limit` (`maxAttempts,decayMinutes`, default `60,1`), registered as the shared `throttle:loyalty-api` limiter; the public write endpoints (create / claim / voucher redeem) keep their own tighter `loyalty.routes.rate_limit` budget (default `30,1`).
 
 ## Frontend
 
@@ -103,7 +106,7 @@ When a stamp crossing meets the next unmet tier threshold, that tier's reward is
 `LoyaltyStatsService::overview(?int $programId, ?Carbon $since, ?Carbon $until)` returns cards issued, active cards, stamps granted, rewards earned/redeemed, and the redemption rate — overall (`totals`) and per program (`programs`) — from a handful of grouped aggregate queries (no N+1). The optional program filter and date range narrow the population.
 
 - **Command:** `php artisan loyalty:stats [--program=id|slug] [--since=date] [--until=date]` prints the breakdown as a table.
-- **Endpoint:** `GET /loyalty/stats` returns the same data as JSON for a consumer dashboard. It is behind the `loyalty:staff` gate and registered only in `api` and `ui` modes (never `headless`). Accepts `program`, `since`, `until` query params.
+- **Endpoint:** `GET /loyalty/stats` returns the same data as JSON for a consumer dashboard, wrapped in the Core envelope under a top-level `data` key (`{ "data": { "range": …, "totals": …, "programs": … } }`). It is behind the `loyalty:staff` gate and registered only in `api` and `ui` modes (never `headless`). Accepts `program`, `since`, `until` query params.
 
 ## Stamp / reward expiry
 

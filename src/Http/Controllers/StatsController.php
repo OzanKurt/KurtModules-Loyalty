@@ -6,12 +6,12 @@ namespace Kurt\Modules\Loyalty\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
+use Kurt\Modules\Core\Http\Controllers\ApiController;
 use Kurt\Modules\Loyalty\Models\Program;
 use Kurt\Modules\Loyalty\Services\LoyaltyStatsService;
 
-class StatsController extends Controller
+class StatsController extends ApiController
 {
     public function index(Request $request, LoyaltyStatsService $stats): JsonResponse
     {
@@ -30,13 +30,13 @@ class StatsController extends Controller
                 ->first();
 
             if ($program === null) {
-                return response()->json(['message' => 'Program not found.'], 404);
+                return $this->fail('Program not found.', 404);
             }
 
             $programId = (int) $program->getKey();
         }
 
-        return response()->json($stats->overview(
+        return $this->respond($stats->overview(
             $programId,
             isset($data['since']) ? Carbon::parse($data['since']) : null,
             isset($data['until']) ? Carbon::parse($data['until']) : null,
