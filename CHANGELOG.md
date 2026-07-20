@@ -4,6 +4,11 @@ All notable changes to `ozankurt/laravel-modules-loyalty` will be documented in 
 
 ## Unreleased
 
+### Added (feature round)
+- **Multi-tier rewards.** New `loyalty_program_tiers` table + `ProgramTier` model (`Program hasMany tiers`). When a program defines tiers, each crossed absolute `threshold` earns that tier's reward and fires a `TierReached` event (plus `CardCompleted`). Programs with no tier rows are unchanged (single repeating `stamps_required` threshold, rollover crediting preserved).
+- **Analytics.** `LoyaltyStatsService` aggregates cards, stamps, and reward earn/redeem funnels overall and per program (optional program + date-range filters, no N+1). Exposed via the `loyalty:stats` command and a staff-gated `GET /loyalty/stats` JSON endpoint (registered in `api` + `ui` modes, not `headless`).
+- **Stamp / reward expiry.** Config defaults (`loyalty.expiry.*`) and per-program `stamp_expiry_days` / `reward_expiry_days` columns (`null` = never expires). The schedulable, idempotent `loyalty:expire` command voids stale stamps and unredeemed earned rewards (new `rewards_expired` counter on cards) in locked transactions, firing `StampsExpired` / `RewardExpired`.
+
 ### Added (hardening round 2)
 - **Terminal rate limiting** — the staff terminal stamp/redeem endpoints get their own `loyalty.routes.terminal_rate_limit` throttle.
 - **Idempotency keys** — stamp/redeem accept an `Idempotency-Key` header (or `idempotency_key` field); a key seen within `loyalty.idempotency.ttl` is a replay and is not re-applied. The JS terminal disables buttons in-flight and sends a key per gesture, so double-taps beyond the cooldown can't add extra stamps.

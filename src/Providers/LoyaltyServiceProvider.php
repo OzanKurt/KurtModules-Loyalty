@@ -7,8 +7,10 @@ namespace Kurt\Modules\Loyalty\Providers;
 use Illuminate\Support\Facades\Event;
 use Kurt\Modules\Core\Providers\PackageServiceProvider;
 use Kurt\Modules\Loyalty\Console\Commands\DemoCommand;
+use Kurt\Modules\Loyalty\Console\Commands\ExpireCommand;
 use Kurt\Modules\Loyalty\Console\Commands\InstallCommand;
 use Kurt\Modules\Loyalty\Console\Commands\PruneVouchersCommand;
+use Kurt\Modules\Loyalty\Console\Commands\StatsCommand;
 use Kurt\Modules\Loyalty\Console\Commands\WalletCheckCommand;
 use Kurt\Modules\Loyalty\Events\CardCompleted;
 use Kurt\Modules\Loyalty\Events\RewardRedeemed;
@@ -41,12 +43,16 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
                 'create_loyalty_wallet_passes_table',
                 'create_loyalty_wallet_registrations_table',
                 'add_external_id_index_to_loyalty_wallet_passes',
+                'create_loyalty_program_tiers_table',
+                'add_expiry_to_loyalty_programs_and_cards',
             ])
             ->hasCommands([
                 InstallCommand::class,
                 DemoCommand::class,
                 PruneVouchersCommand::class,
                 WalletCheckCommand::class,
+                StatsCommand::class,
+                ExpireCommand::class,
             ]);
     }
 

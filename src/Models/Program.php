@@ -25,11 +25,14 @@ use Spatie\Translatable\HasTranslations;
  * @property int $cooldown_seconds
  * @property int|null $max_per_day
  * @property bool $reset_on_reward
+ * @property int|null $stamp_expiry_days
+ * @property int|null $reward_expiry_days
  * @property bool $is_active
  * @property string|null $owner_type
  * @property int|null $owner_id
  * @property Collection<int, Card> $cards
  * @property Collection<int, Voucher> $vouchers
+ * @property Collection<int, ProgramTier> $tiers
  * @property Model|null $owner
  */
 class Program extends Model
@@ -52,6 +55,8 @@ class Program extends Model
         'cooldown_seconds' => 'integer',
         'max_per_day' => 'integer',
         'reset_on_reward' => 'boolean',
+        'stamp_expiry_days' => 'integer',
+        'reward_expiry_days' => 'integer',
         'is_active' => 'boolean',
     ];
 
@@ -59,6 +64,34 @@ class Program extends Model
     public function cards(): HasMany
     {
         return $this->hasMany(Card::class);
+    }
+
+    /** @return HasMany<ProgramTier, $this> */
+    public function tiers(): HasMany
+    {
+        return $this->hasMany(ProgramTier::class)->orderBy('threshold');
+    }
+
+    /**
+     * Effective stamp-expiry window in days: the per-program column, or the
+     * config default, or null (never expires).
+     */
+    public function stampExpiryDays(): ?int
+    {
+        $days = $this->stamp_expiry_days ?? config('loyalty.expiry.stamp_days');
+
+        return $days === null ? null : (int) $days;
+    }
+
+    /**
+     * Effective reward-expiry window in days: the per-program column, or the
+     * config default, or null (never expires).
+     */
+    public function rewardExpiryDays(): ?int
+    {
+        $days = $this->reward_expiry_days ?? config('loyalty.expiry.reward_days');
+
+        return $days === null ? null : (int) $days;
     }
 
     /** @return HasMany<Voucher, $this> */

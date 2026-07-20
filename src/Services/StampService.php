@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Kurt\Modules\Loyalty\Services;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Kurt\Modules\Loyalty\Enums\StampSource;
 use Kurt\Modules\Loyalty\Events\CardCompleted;
 use Kurt\Modules\Loyalty\Events\StampAdded;
+use Kurt\Modules\Loyalty\Events\TierReached;
 use Kurt\Modules\Loyalty\Exceptions\DailyStampLimitReachedException;
 use Kurt\Modules\Loyalty\Exceptions\StampThrottledException;
 use Kurt\Modules\Loyalty\Models\Card;
+use Kurt\Modules\Loyalty\Models\ProgramTier;
 use Kurt\Modules\Loyalty\Models\Voucher;
 
 final class StampService
@@ -31,7 +34,6 @@ final class StampService
             }
             $this->guardDailyLimit($card);
 
-            $required = (int) $card->program->stamps_required;
             $before = $card->stamps_count;
 
             $card->stamps()->create([
@@ -41,26 +43,65 @@ final class StampService
                 'created_at' => now(),
             ]);
 
+            $after = $before + 1;
+
             $card->forceFill([
-                'stamps_count' => $before + 1,
+                'stamps_count' => $after,
                 'last_stamped_at' => now(),
             ])->save();
 
             event(new StampAdded($card, $source));
 
-            // Credit every reward threshold crossed by this stamp — not just the
-            // first — so rollover cards (reset_on_reward = false) that reach a
-            // multiple of stamps_required without an intervening redemption earn
-            // each reward. In reset mode this still credits exactly once per goal.
-            $after = $before + 1;
-            $earned = $required > 0 ? intdiv($after, $required) - intdiv($before, $required) : 0;
-            if ($earned > 0) {
-                $card->forceFill(['rewards_earned' => $card->rewards_earned + $earned])->save();
-                event(new CardCompleted($card));
-            }
+            $this->creditRewards($card, $before, $after);
 
             return $card->refresh();
         });
+    }
+
+    /**
+     * Credit rewards for the thresholds this stamp just crossed.
+     *
+     * If the program defines tiers, each tier whose absolute threshold falls in
+     * `($before, $after]` is earned once, firing a `TierReached` event. Programs
+     * with no tier rows fall back to the original repeating single-threshold
+     * behavior (which preserves rollover crediting for `reset_on_reward = false`).
+     */
+    private function creditRewards(Card $card, int $before, int $after): void
+    {
+        $tiers = $card->program->tiers;
+
+        if ($tiers->isNotEmpty()) {
+            /** @var Collection<int, ProgramTier> $crossed */
+            $crossed = $tiers->filter(
+                fn (ProgramTier $tier): bool => $tier->threshold > $before && $tier->threshold <= $after
+            )->values();
+
+            if ($crossed->isEmpty()) {
+                return;
+            }
+
+            $card->forceFill(['rewards_earned' => $card->rewards_earned + $crossed->count()])->save();
+
+            foreach ($crossed as $tier) {
+                event(new TierReached($card, $tier));
+            }
+
+            event(new CardCompleted($card));
+
+            return;
+        }
+
+        // Credit every reward threshold crossed by this stamp — not just the
+        // first — so rollover cards (reset_on_reward = false) that reach a
+        // multiple of stamps_required without an intervening redemption earn
+        // each reward. In reset mode this still credits exactly once per goal.
+        $required = (int) $card->program->stamps_required;
+        $earned = $required > 0 ? intdiv($after, $required) - intdiv($before, $required) : 0;
+
+        if ($earned > 0) {
+            $card->forceFill(['rewards_earned' => $card->rewards_earned + $earned])->save();
+            event(new CardCompleted($card));
+        }
     }
 
     private function guardThrottle(Card $card): void
