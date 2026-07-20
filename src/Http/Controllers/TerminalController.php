@@ -29,7 +29,7 @@ class TerminalController extends Controller
     {
         $card = $this->resolveCard($request);
 
-        if ($this->isReplay($request)) {
+        if ($this->isReplay($request, 'stamp:'.$card->getKey())) {
             return response()->json(CardState::for($card));
         }
 
@@ -46,7 +46,7 @@ class TerminalController extends Controller
     {
         $card = $this->resolveCard($request);
 
-        if ($this->isReplay($request)) {
+        if ($this->isReplay($request, 'redeem:'.$card->getKey())) {
             return response()->json(CardState::for($card));
         }
 
@@ -63,11 +63,11 @@ class TerminalController extends Controller
      * True when the request carries an idempotency key already seen within the
      * TTL — a double-tap / retry that must not re-apply the action.
      */
-    private function isReplay(Request $request): bool
+    private function isReplay(Request $request, string $scope): bool
     {
         $key = Idempotency::key($request);
 
-        return $key !== null && ! Idempotency::claim($key);
+        return $key !== null && ! Idempotency::claim($key, $scope);
     }
 
     private function resolveCard(Request $request): Card
@@ -76,10 +76,13 @@ class TerminalController extends Controller
         $value = trim($data['card_token']);
 
         // The terminal is staff-gated, so it may resolve a card by either the
-        // scanned/typed short code or the long URL token.
+        // scanned/typed short code or the long URL token. The OR is grouped so
+        // the SoftDeletes `deleted_at is null` scope applies to both branches
+        // (an ungrouped OR would leave soft-deleted cards resolvable).
         return Card::query()
-            ->where('code', strtoupper($value))
-            ->orWhere('token', $value)
+            ->where(function ($q) use ($value) {
+                $q->where('code', strtoupper($value))->orWhere('token', $value);
+            })
             ->firstOrFail();
     }
 

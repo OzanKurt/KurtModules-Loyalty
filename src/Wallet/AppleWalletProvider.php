@@ -133,8 +133,8 @@ final class AppleWalletProvider implements WalletProvider
         }
 
         $serial = $this->serialFor($card);
-        $tokens = WalletRegistration::query()->where('pass_serial', $serial)->pluck('push_token')->all();
-        if ($tokens === []) {
+        $registrations = WalletRegistration::query()->where('pass_serial', $serial)->get();
+        if ($registrations->isEmpty()) {
             return;
         }
 
@@ -142,9 +142,9 @@ final class AppleWalletProvider implements WalletProvider
         $host = rtrim((string) $this->config['apns_host'], '/');
 
         try {
-            foreach ($tokens as $deviceToken) {
+            foreach ($registrations as $registration) {
                 // Empty APNs background push; the device then re-fetches the pass.
-                Http::withOptions([
+                $response = Http::withOptions([
                     'cert' => $certPem,
                     'ssl_key' => $keyPem,
                     'version' => 2.0,
@@ -152,7 +152,13 @@ final class AppleWalletProvider implements WalletProvider
                     'apns-topic' => (string) $this->config['pass_type_id'],
                     'apns-push-type' => 'background',
                     'apns-priority' => '5',
-                ])->post($host.'/3/device/'.$deviceToken, ['aps' => (object) []]);
+                ])->post($host.'/3/device/'.$registration->push_token, ['aps' => (object) []]);
+
+                // APNs 410 Gone / 400 BadDeviceToken → the token is dead; prune it
+                // so registrations don't grow unbounded with stale devices.
+                if (in_array($response->status(), [400, 410], true)) {
+                    $registration->delete();
+                }
             }
         } finally {
             @unlink($certPem);

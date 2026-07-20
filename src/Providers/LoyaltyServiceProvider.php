@@ -40,6 +40,7 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
                 'create_loyalty_redemptions_table',
                 'create_loyalty_wallet_passes_table',
                 'create_loyalty_wallet_registrations_table',
+                'add_external_id_index_to_loyalty_wallet_passes',
             ])
             ->hasCommands([
                 InstallCommand::class,

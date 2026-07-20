@@ -62,6 +62,28 @@ npm run build   # -> resources/dist (loyalty.js, loyalty.css, themes/*)
 npm run test    # Vitest
 ```
 
+**Data-attribute contract** (rewrite the Blade freely as long as these survive):
+
+| Attribute | Role |
+|---|---|
+| `data-loyalty-card` / `data-loyalty-token` / `data-loyalty-state-url` | card root + poll target |
+| `data-loyalty-stamps` → `data-loyalty-stamp[data-state]` | the stamp grid (JS toggles `data-state`) |
+| `data-loyalty-progress` / `data-loyalty-count` / `data-loyalty-required` | progress (live region) |
+| `data-loyalty-qr` / `data-loyalty-wallet="apple\|google"` | QR + wallet buttons |
+| `data-loyalty-terminal` + `data-loyalty-{scanner,card-input,stamp-btn,redeem-btn,terminal-result}` | staff terminal |
+
+## Wallet setup
+
+Both providers are opt-in and only render buttons once configured. Env vars:
+
+- **Apple:** `LOYALTY_APPLE_WALLET=true`, `LOYALTY_APPLE_PASS_TYPE_ID`, `LOYALTY_APPLE_TEAM_ID`, `LOYALTY_APPLE_CERTIFICATE` (+ `_PASSWORD`), `LOYALTY_APPLE_WWDR_CERTIFICATE`.
+- **Google:** `LOYALTY_GOOGLE_WALLET=true`, `LOYALTY_GOOGLE_ISSUER_ID`, `LOYALTY_GOOGLE_CLASS_ID`, `LOYALTY_GOOGLE_SERVICE_ACCOUNT` (path to the JSON key).
+- **Live push:** `LOYALTY_WALLET_PUSH=true` + a queue worker (Apple via APNs using the pass cert, Google via object PATCH). Run `php artisan loyalty:wallet-check` to verify.
+
+## Roadmap (not yet implemented)
+
+Stamp/reward expiry, analytics/reporting, and multi-tier rewards are natural next features, not present in v2.0.
+
 See [`docs/superpowers/specs`](docs/superpowers/specs) for the full design and [`docs/superpowers/plans`](docs/superpowers/plans) for the build plan.
 
 ## License
