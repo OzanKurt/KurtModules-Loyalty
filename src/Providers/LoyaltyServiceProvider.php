@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kurt\Modules\Loyalty\Providers;
 
 use Illuminate\Support\Facades\Event;
+use Kurt\Modules\Core\Modules\ModuleManifest;
 use Kurt\Modules\Core\Providers\PackageServiceProvider;
 use Kurt\Modules\Core\Support\ApiRateLimiter;
 use Kurt\Modules\Loyalty\Console\Commands\DemoCommand;
@@ -25,6 +26,13 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
     protected function module(): string
     {
         return 'loyalty';
+    }
+
+    protected function moduleManifest(): ?ModuleManifest
+    {
+        return ModuleManifest::make('loyalty')
+            ->name('Loyalty')
+            ->description('Digital loyalty / stamp-card system for Laravel apps (KurtModules).');
     }
 
     public function configurePackage(Package $package): void
@@ -64,6 +72,8 @@ final class LoyaltyServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
+        parent::packageBooted();
+
         // Loaded under a clean `loyalty::` namespace (not Spatie's derived
         // `modules-loyalty::`), and available regardless of HTTP mode.
         $this->loadTranslationsFrom(__DIR__.'/../../lang', 'loyalty');
